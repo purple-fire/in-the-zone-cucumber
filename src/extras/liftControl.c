@@ -1,25 +1,6 @@
 #include "liftControl.h"
+#include "utilities.h"
 #include "pid.h"
-
-int limitLiftPower(int power)
-{
- int sign = power >= 0 ? 1: -1;
-
- int	outputPower;
- outputPower = ABS(power);
-
- if(outputPower > MAX_POWER_OUT)
- {
-   outputPower = MAX_POWER_OUT;
- }
- else if(outputPower < MIN_POWER_OUT)
- {
-   outputPower = MIN_POWER_OUT;
- }
-
- return(outputPower*sign);
-}
-
 
 void liftControl(void * parameter)
 {
@@ -39,7 +20,7 @@ void liftControl(void * parameter)
 
 		 int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
 
-		 int liftPowerOut = limitLiftPower(pidNextIteration(&data, errorLiftAngle));
+		 int liftPowerOut = limitMotorPower(pidNextIteration(&data, errorLiftAngle));
 
 		 motorSet (liftMotor,liftPowerOut);
 

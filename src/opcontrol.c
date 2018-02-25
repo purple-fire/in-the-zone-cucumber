@@ -29,70 +29,40 @@
  *
  * This task should never exit; it should end with some kind of infinite loop, even if empty.
  */
+  #include "utilities.h"
  	#include "pid.h"
  	#include "liftControl.h"
-	#define ABS(x)          ( (x)>=0?(x):-(x) )
 
- //Define Motors
- 	#define rightMotorR 2
- 	#define rightMotorF 3
- 	#define liftMotor 4
- 	#define leftMotorR 7
- 	#define leftMotorF 8
+  // ROBOT CONFIG //
+   //Define Motors
+   	#define rightMotorR 2
+   	#define rightMotorF 3
+   	#define liftMotor 4
+   	#define leftMotorR 7
+   	#define leftMotorF 8
 
- //Define Sensors
-  #define GYRO_PORT 8
-  Gyro gyro;
+   //Define Sensors
+    #define GYRO_PORT 8
+    Gyro gyro;
 
-  #define QUAD_TOP_PORT_LEFT 1
-  #define QUAD_BOTTOM_PORT_LEFT  2
-  #define QUAD_TOP_PORT_RIGHT 3
-  #define QUAD_BOTTOM_PORT_RIGHT  4
-  Encoder BLEncoder;
-  Encoder BREncoder;
+    #define QUAD_TOP_PORT_LEFT 1
+    #define QUAD_BOTTOM_PORT_LEFT  2
+    #define QUAD_TOP_PORT_RIGHT 3
+    #define QUAD_BOTTOM_PORT_RIGHT  4
+    Encoder BLEncoder;
+    Encoder BREncoder;
 
-  #define POTENTIOMETER_PORT 2
-
-//Storing Constants for Wheel Diameter and Pi
-#define wheelDiameter 4
-#define Pi 3.14159
-
-// Controller 1/2, Stick L/R, Axis X/Y
-#define C1RY						                2
-#define C1LY						                3
-#define C1RX							              1
-#define C1LX								            4
-
-#define MAX_POWER_OUT										127
-#define MIN_POWER_OUT								  	10
-
-int  limitTeleMotorPower(int power)
-{
-	int sign = power >= 0 ? 1: -1;
-
-	int	outputPower;
-	outputPower = ABS(power);
-
-	if(outputPower > MAX_POWER_OUT)
-	{
-		outputPower = MAX_POWER_OUT;
-	}
-	else if(outputPower < MIN_POWER_OUT)
-	{
-		outputPower = MIN_POWER_OUT;
-	}
-
-	return(outputPower*sign);
-}
+    #define POTENTIOMETER_PORT 2
+  //////////////////
 
 //H-Drive using 4 Inputs
 void driveTrain(void * parameter){
 	while (true)
 	{
-		motorSet (rightMotorF,(joystickGetAnalog(1,C1RY))*0.8);
-		motorSet (leftMotorF,(joystickGetAnalog(1,C1LY))*0.8);
-		motorSet (rightMotorR,(joystickGetAnalog(1,C1RY))*0.8);
-		motorSet (leftMotorR,(joystickGetAnalog(1,C1LY))*0.8);
+		motorSet (rightMotorF,(joystickGetAnalog(1,CRY))*0.8);
+		motorSet (leftMotorF,(joystickGetAnalog(1,CLY))*0.8);
+		motorSet (rightMotorR,(joystickGetAnalog(1,CRY))*0.8);
+		motorSet (leftMotorR,(joystickGetAnalog(1,CLY))*0.8);
 		// Motor values can only be updated every 20ms
 		 delay(20);
 	}

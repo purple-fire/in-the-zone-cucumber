@@ -1,4 +1,5 @@
 #include "pid.h"
+#include "utilities.h"
 
 void pidDataReset(PIDData *data)
 {
@@ -29,7 +30,7 @@ float pidNextIteration(PIDData *data, float error)
 	int result;
 
 
-	if (PIDABS(error) > (data->maximumInput - data->minimumInput) / 2) {
+	if (ABS(error) > (data->maximumInput - data->minimumInput) / 2) {
 		if (error > 0) {
 			error = error - data->maximumInput + data->minimumInput;
 			} else {
@@ -46,7 +47,7 @@ float pidNextIteration(PIDData *data, float error)
 		data->lastIntegral = 0;
 	}
 
-	if( PIDABS(error) < data->integralRange ){
+	if( ABS(error) < data->integralRange ){
 	data->lastIntegral += error;
 	}
 	else{
@@ -72,7 +73,7 @@ int result;
 proportional = error;
 
 // Bound integral
-if( PIDABS(error) < data->integralRange ){
+if( ABS(error) < data->integralRange ){
 data->lastIntegral += error;
 }
 else{

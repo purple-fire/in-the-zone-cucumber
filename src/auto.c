@@ -26,10 +26,11 @@
  * The autonomous task may exit, unlike operatorControl() which should never exit. If it does
  * so, the robot will await a switch to another mode or disable/enable cycle.
  */
+ #include "utilities.h"
  #include "pid.h"
  #include "liftControl.h"
- #define ABS(x)          ( (x)>=0?(x):-(x) )
 
+// ROBOT CONFIG //
  //Define Motors
  	#define rightMotorR 2
  	#define rightMotorF 3
@@ -49,10 +50,7 @@
   Encoder BREncoder;
 
   #define POTENTIOMETER_PORT 2
-
-  //Storing Constants for Wheel Diameter and Pi
- #define wheelDiameter 4
- #define Pi 3.14159
+//////////////////
 
  int tickGoal=0;
 
@@ -69,25 +67,6 @@
 
  #define MAX_POWER_OUT										127
  #define MIN_POWER_OUT								  	10
-
- int  limitAutoMotorPower(int power)
- {
- 	int sign = power >= 0 ? 1: -1;
-
- 	int	outputPower;
- 	outputPower = ABS(power);
-
- 	if(outputPower > MAX_POWER_OUT)
- 	{
- 		outputPower = MAX_POWER_OUT;
- 	}
- 	else if(outputPower < MIN_POWER_OUT)
- 	{
- 		outputPower = MIN_POWER_OUT;
- 	}
-
- 	return(outputPower*sign);
- }
 
  void stopMotors ()
  {
@@ -141,10 +120,10 @@
  	while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
 
  		rightError = encoderGet(BREncoder) - target;
-    rightPower =  limitAutoMotorPower(pidNextIteration(&rightData, rightError));
+    rightPower =  limitMotorPower(pidNextIteration(&rightData, rightError));
 
  		leftError = encoderGet(BLEncoder) - target;
-    leftPower =  limitAutoMotorPower(pidNextIteration(&leftData, leftError));
+    leftPower =  limitMotorPower(pidNextIteration(&leftData, leftError));
 
     motorSet (rightMotorF,-rightPower);
     motorSet (rightMotorR,-rightPower);
@@ -182,7 +161,7 @@
 
  		turnError = gyroValue - target;
 
-    //turnPower =  limitAutoMotorPower(pidNextIteration(&data, turnError));
+    //turnPower =  limitMotorPower(pidNextIteration(&data, turnError));
     turnPower = pidNextIteration(&data, turnError);
 
  		// TODO Should we check that each side moves the same amount and adjust them

@@ -1,5 +1,4 @@
 #include <main.h>
-#define PIDABS(x) ( (x)>=0?(x):-(x) )
 
 typedef struct PIDData
 {
