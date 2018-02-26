@@ -11,6 +11,7 @@
  */
 
 #include "main.h"
+#include "liftControl.h"
 
 /*
  * Runs pre-initialization code. This function will be started in kernel mode one time while the
@@ -37,4 +38,8 @@ void initializeIO() {
  * can be implemented in this task if desired.
  */
 void initialize() {
+  TaskHandle liftControlHandle = taskCreate(
+      liftControl, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+      return;
+      taskDelete(liftControlHandle);
 }

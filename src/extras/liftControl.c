@@ -15,11 +15,18 @@ void liftControl(void *parameter) {
     if (liftToggle == 1) {
 
       int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
+      printf("lift position: %d\r\n",
+             analogRead(POTENTIOMETER_PORT)); // grab the latest value from a
+                                              // quadrature encoder
 
       int liftPowerOut =
           limitMotorPower(pidNextIteration(&data, errorLiftAngle));
 
-      motorSet(liftMotor, liftPowerOut);
+      if (ABS(errorLiftAngle) < 10) {
+        motorSet(liftMotor, 0);
+      } else {
+        motorSet(liftMotor, liftPowerOut);
+      }
 
     } else {
       motorSet(liftMotor, 0);

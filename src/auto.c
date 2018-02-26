@@ -34,10 +34,9 @@
  * exit. If it does
  * so, the robot will await a switch to another mode or disable/enable cycle.
  */
+#include "utilities.h"
 #include "liftControl.h"
 #include "pid.h"
-#include "utilities.h"
-
 // ROBOT CONFIG //
 // Define Motors
 #define rightMotorR 2
@@ -77,8 +76,8 @@ int gyroValue;
 #define MIN_POWER_OUT 10
 
 void stopMotors() {
-  motorSet(rightMotorF, 10);
-  motorSet(rightMotorR, 10);
+  motorSet(-rightMotorF, 10);
+  motorSet(-rightMotorR, 10);
   motorSet(leftMotorF, 10);
   motorSet(leftMotorR, 10);
 }
@@ -130,8 +129,8 @@ void baseControl(float target, float power, float integralRange,
     leftError = encoderGet(BLEncoder) - target;
     leftPower = limitMotorPower(pidNextIteration(&leftData, leftError));
 
-    motorSet(rightMotorF, -rightPower);
-    motorSet(rightMotorR, -rightPower);
+    motorSet(rightMotorF, rightPower);
+    motorSet(rightMotorR, rightPower);
     motorSet(leftMotorF, -leftPower);
     motorSet(leftMotorR, -leftPower);
 
@@ -172,8 +171,8 @@ void baseTurn(float target, float power, float integralRange, bool leftToggle,
     // TODO Should we check that each side moves the same amount and adjust them
     // afterwards if not?
     if (rightToggle) {
-      motorSet(rightMotorF, -turnPower);
-      motorSet(rightMotorR, -turnPower);
+      motorSet(rightMotorF, turnPower);
+      motorSet(rightMotorR, turnPower);
     }
     if (leftToggle) {
       motorSet(leftMotorF, turnPower);
@@ -207,11 +206,11 @@ void wallTurn(float target, float power, bool leftToggle, bool rightToggle) {
   }
   if (rightToggle) {
     motorSet(rightMotorF, 10);
-    motorSet(rightMotorR, 10);
+    motorSet(rightMotorR, -10);
   }
   if (leftToggle) {
     motorSet(leftMotorF, -10);
-    motorSet(leftMotorR, -10);
+    motorSet(leftMotorR, 10);
   }
   delay(200);
 }
@@ -223,8 +222,8 @@ void driveTime(float powerL, float powerR, float timeOut) {
   timeOut = timeOut * 1000;
 
   while (T1 > (millis() - timeOut)) {
-    motorSet(rightMotorF, powerR);
-    motorSet(rightMotorR, powerR);
+    motorSet(rightMotorF, -powerR);
+    motorSet(rightMotorR, -powerR);
     motorSet(leftMotorF, powerL);
     motorSet(leftMotorR, powerL);
   }
@@ -232,9 +231,6 @@ void driveTime(float powerL, float powerR, float timeOut) {
 }
 
 void autonomous() {
-  TaskHandle liftControlHandle = taskCreate(
-      liftControl, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
-
   // Initialize the gryo
   gyro = gyroInit(GYRO_PORT, 102);
   delay(2000);
@@ -336,5 +332,4 @@ void autonomous() {
   delay(200);
 
   delay(2000);
-  taskDelete(liftControlHandle); // stop running the task
 }

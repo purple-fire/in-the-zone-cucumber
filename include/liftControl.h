@@ -1,8 +1,8 @@
 #define ABS(x)          ( (x)>=0?(x):-(x) )
 
-#define liftDown 1420
-#define liftHalf 1210
-#define liftUp 4
+#define liftDown 1485
+#define liftHalf 1280
+#define liftUp 9
 
 #define liftMotor 4
 #define POTENTIOMETER_PORT 2
