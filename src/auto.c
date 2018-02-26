@@ -12,54 +12,16 @@
  */
 
 #include "main.h"
-
-/*
- * Runs the user autonomous code. This function will be started in its own task
- * with the default
- * priority and stack size whenever the robot is enabled via the Field
- * Management System or the
- * VEX Competition Switch in the autonomous mode. If the robot is disabled or
- * communications is
- * lost, the autonomous task will be stopped by the kernel. Re-enabling the
- * robot will restart
- * the task, not re-start it from where it left off.
- *
- * Code running in the autonomous task cannot access information from the VEX
- * Joystick. However,
- * the autonomous function can be invoked from another task if a VEX Competition
- * Switch is not
- * available, and it can access joystick information if called in this way.
- *
- * The autonomous task may exit, unlike operatorControl() which should never
- * exit. If it does
- * so, the robot will await a switch to another mode or disable/enable cycle.
- */
 #include "utilities.h"
-#include "liftControl.h"
 #include "pid.h"
-// ROBOT CONFIG //
-// Define Motors
-#define rightMotorR 2
-#define rightMotorF 3
-#define liftMotor 4
-#define leftMotorR 7
-#define leftMotorF 8
+#include "liftControl.h"
 
-// Define Sensors
-#define GYRO_PORT 8
-Gyro gyro;
+/* Globals so that values can be seen from outside functions.
+ * These may be obsolete, sincne PROS does not have a built-in monitor of
+ * globals.
+ */
 
-#define QUAD_TOP_PORT_LEFT 1
-#define QUAD_BOTTOM_PORT_LEFT 2
-#define QUAD_TOP_PORT_RIGHT 3
-#define QUAD_BOTTOM_PORT_RIGHT 4
-Encoder BLEncoder;
-Encoder BREncoder;
-
-#define POTENTIOMETER_PORT 2
-//////////////////
-
-int tickGoal = 0;
+int tickGoal=0;
 
 int rightError;
 int rightPower;
@@ -72,264 +34,253 @@ int turnPower;
 
 int gyroValue;
 
-#define MAX_POWER_OUT 127
-#define MIN_POWER_OUT 10
-
-void stopMotors() {
-  motorSet(-rightMotorF, 10);
-  motorSet(-rightMotorR, 10);
-  motorSet(leftMotorF, 10);
-  motorSet(leftMotorR, 10);
+void stopMotors ()
+{
+    motorStop(rightMotorF);
+    motorStop(rightMotorR);
+    motorStop(leftMotorF);
+    motorStop(leftMotorR);
 }
 
-int inchToTicks(float inch) {
-  float wheelCircumference = wheelDiameter * Pi;
-  int ticks = 360 / wheelCircumference;
-  tickGoal = ticks * inch;
-  return tickGoal;
-}
+void baseControl(float target, float power, float integralRange, float timeOut)
+{
 
-//>>>>>>>>>>>>>>>>>>>>>>>>------------------0-----------------<<<<<<<<<<<<<<<<<<<<<<<<<
+    // Do PID on each side separately to help account for physical inaccuracies
+    PIDData rightData;
+    PIDData leftData;
 
-void baseControl(float target, float power, float integralRange,
-                 float timeOut) {
+    float kp = 0.25;
+    float ki = 0.02;
+    float kd = 0.9;
+    float maxPower = power;
 
-  // Do PID on each side separately to help account for physical inaccuracies
-  PIDData rightData;
-  PIDData leftData;
+    pidDataInit(&leftData, kp, ki, kd, maxPower, 32767, integralRange);
+    pidDataInit(&rightData, kp, ki, kd, maxPower, 32767, integralRange);
 
-  float kp = 0.25;
-  float ki = 0.02;
-  float kd = 0.9;
-  float maxPower = power;
+    encoderReset(BLEncoder);
+    encoderReset(BREncoder);
 
-  // For 12 inches
-  // P 0.2
-  // I 0.001
+    target = INCHES_TO_TICKS(target);
 
-  pidDataInit(&leftData, kp, ki, kd, maxPower, 32767, integralRange);
-  pidDataInit(&rightData, kp, ki, kd, maxPower, 32767, integralRange);
+    long T1,T2;
+    T1 = millis();
+    T2 = millis();
 
-  encoderReset(BLEncoder);
-  encoderReset(BREncoder);
+    timeOut = timeOut*1000;
 
-  target = inchToTicks(target);
+    while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
 
-  long T1, T2;
-  T1 = millis();
-  T2 = millis();
+        rightError = encoderGet(BREncoder) - target;
+        rightPower =  limitMotorPower(pidNextIteration(&rightData, rightError));
 
-  timeOut = timeOut * 1000;
+        leftError = encoderGet(BLEncoder) - target;
+        leftPower =  limitMotorPower(pidNextIteration(&leftData, leftError));
 
-  while ((T1 > (millis() - 350)) && (T2 > (millis() - timeOut))) {
+        motorSet (rightMotorF,-rightPower);
+        motorSet (rightMotorR,-rightPower);
+        motorSet (leftMotorF,-leftPower);
+        motorSet (leftMotorR,-leftPower);
 
-    rightError = encoderGet(BREncoder) - target;
-    rightPower = limitMotorPower(pidNextIteration(&rightData, rightError));
+        if((ABS(leftError)>60)||(ABS(rightError)>60)){
+            T1 = millis();
+        }
 
-    leftError = encoderGet(BLEncoder) - target;
-    leftPower = limitMotorPower(pidNextIteration(&leftData, leftError));
-
-    motorSet(rightMotorF, rightPower);
-    motorSet(rightMotorR, rightPower);
-    motorSet(leftMotorF, -leftPower);
-    motorSet(leftMotorR, -leftPower);
-
-    if ((ABS(leftError) > 60) || (ABS(rightError) > 60)) {
-      T1 = millis();
+        delay(20);
     }
-
-    delay(20);
-  }
-  stopMotors();
+    stopMotors();
 }
 
-void baseTurn(float target, float power, float integralRange, bool leftToggle,
-              bool rightToggle, float timeOut) {
+void baseTurn(float target, float power, float integralRange,
+        bool leftToggle, bool rightToggle, float timeOut)
+{
 
-  float kp = 0.25;
-  float ki = 0.02;
-  float kd = 0.9;
-  float maxPower = power;
+    float kp = 0.25;
+    float ki = 0.02;
+    float kd = 0.9;
+    float maxPower = power;
 
-  PIDData data;
-  pidDataInit(&data, kp, ki, kd, maxPower, 3600, integralRange);
+    PIDData data;
+    pidDataInit(&data, kp, ki, kd, maxPower, 3600, integralRange);
 
-  long T1, T2;
-  T1 = millis();
-  T2 = millis();
+    long T1,T2;
+    T1 = millis();
+    T2 = millis();
 
-  timeOut = timeOut * 1000;
+    timeOut = timeOut*1000;
 
-  while ((T1 > (millis() - 350)) && (T2 > (millis() - timeOut))) {
+    while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
+        gyroValue = gyroGet(gyro);
+
+        turnError = gyroValue - target;
+
+        turnPower = limitMotorPower(pidNextIteration(&data, turnError));
+
+        // TODO Should we check that each side moves the same amount and adjust
+        // them afterwards if not?
+        if(rightToggle){
+            motorSet (rightMotorF,-turnPower);
+            motorSet (rightMotorR,-turnPower);
+        }
+
+        if(leftToggle){
+            motorSet (leftMotorF,turnPower);
+            motorSet (leftMotorR,turnPower);
+        }
+
+        if((ABS(turnError)>10)){
+            T1 = millis();
+        }
+
+        delay(20);
+    }
+    stopMotors ();
+}
+
+/**
+ * Obsolete time-based turn function
+ * TODO Remove
+ */
+void wallTurn(float target, float power, bool leftToggle, bool rightToggle)
+{
+    gyroReset (gyro);
     gyroValue = gyroGet(gyro);
 
-    turnError = gyroValue - target;
+    while (ABS(gyroValue)<target) {
+        turnError = gyroValue - target;
+        gyroValue = gyroGet(gyro);
 
-    // turnPower =  limitMotorPower(pidNextIteration(&data, turnError));
-    turnPower = pidNextIteration(&data, turnError);
-
-    // TODO Should we check that each side moves the same amount and adjust them
-    // afterwards if not?
-    if (rightToggle) {
-      motorSet(rightMotorF, turnPower);
-      motorSet(rightMotorR, turnPower);
+        if(rightToggle){
+            motorSet (rightMotorF,-power);
+            motorSet (rightMotorR,-power);
+        }
+        if(leftToggle){
+            motorSet (leftMotorF,power);
+            motorSet (leftMotorR,power);
+        }
     }
-    if (leftToggle) {
-      motorSet(leftMotorF, turnPower);
-      motorSet(leftMotorR, turnPower);
+    if(rightToggle){
+        motorSet (rightMotorF,10);
+        motorSet (rightMotorR,10);
     }
-
-    if ((ABS(turnError) > 10)) {
-      T1 = millis();
+    if(leftToggle){
+        motorSet (leftMotorF,-10);
+        motorSet (leftMotorR,-10);
     }
-    delay(20);
-  }
-  stopMotors();
+    delay(200);
 }
 
-void wallTurn(float target, float power, bool leftToggle, bool rightToggle) {
-  gyroReset(gyro);
-  gyroValue = gyroGet(gyro);
+/**
+ * Time-based drive function for when we don't care too much about distance
+ * (when going over the bump and aligning along walls/pipes).
+ */
+void driveTime(float powerL, float powerR, float timeOut)
+{
+    long T1;
+    T1 = millis();
 
-  while (ABS(gyroValue) < target) {
-    turnError = gyroValue - target;
-    gyroValue = gyroGet(gyro);
+    timeOut = timeOut*1000;
 
-    if (rightToggle) {
-      motorSet(rightMotorF, -power);
-      motorSet(rightMotorR, -power);
+    while (T1 > (millis() - timeOut)) {
+        motorSet (rightMotorF,powerR);
+        motorSet (rightMotorR,powerR);
+        motorSet (leftMotorF,powerL);
+        motorSet (leftMotorR,powerL);
     }
-    if (leftToggle) {
-      motorSet(leftMotorF, power);
-      motorSet(leftMotorR, power);
-    }
-  }
-  if (rightToggle) {
-    motorSet(rightMotorF, 10);
-    motorSet(rightMotorR, -10);
-  }
-  if (leftToggle) {
-    motorSet(leftMotorF, -10);
-    motorSet(leftMotorR, 10);
-  }
-  delay(200);
+    stopMotors ();
 }
 
-void driveTime(float powerL, float powerR, float timeOut) {
-  long T1;
-  T1 = millis();
+void autonomous ()
+{
+    setLiftAngle(liftDown);
+    liftToggle = 1;
+    delay(700);
 
-  timeOut = timeOut * 1000;
+    //NOW START!
 
-  while (T1 > (millis() - timeOut)) {
-    motorSet(rightMotorF, -powerR);
-    motorSet(rightMotorR, -powerR);
-    motorSet(leftMotorF, powerL);
-    motorSet(leftMotorR, powerL);
-  }
-  stopMotors();
+    //FIRST BASE
+    baseControl(56,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftUp);
+    delay(1000);
+    baseTurn(-25,90,300,true,true,1);
+    delay(200);
+    baseControl(-70,80,100,2.5);
+    delay(200);
+    baseTurn(-135,100,300,true,true,3);
+    delay(200);
+    driveTime(127,127,1.2);
+    delay(200);
+    setLiftAngle(liftHalf-100);
+    delay(200);
+    driveTime(-127,-127,0.5);
+    delay(200);
+
+    //SECOND BASE
+    baseTurn(-45,100,300,true,true,3);
+    delay(200);
+    baseControl(-15,80,100,2.5);
+    delay(200);
+    baseTurn(45,100,300,true,true,3);
+    delay(200);
+    setLiftAngle(liftDown);
+    delay(200);
+    baseControl(40,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftUp);
+    delay(200);
+    baseTurn(-132.5,100,300,true,true,3);
+    delay(200);
+    baseControl(45,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftHalf);
+    delay(200);
+    baseControl(-8,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftUp);
+    delay(200);
+
+    //THIRD BASE
+    baseTurn(-45,100,300,true,true,3);
+    delay(200);
+    baseControl(33,80,100,2.5);
+    delay(200);
+    baseTurn(45,100,300,true,true,3);
+    delay(200);
+    setLiftAngle(liftDown);
+    delay(600);
+    baseControl(33,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftUp);
+    delay(500);
+    baseTurn(-135,100,300,true,true,3);
+    delay(200);
+    baseControl(45,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftHalf);
+    delay(200);
+    baseControl(-25,80,100,2.5);
+    delay(200);
+    setLiftAngle(liftUp);
+    delay(200);
+
+    //FOURTH BASE
+    baseTurn(45,100,300,true,true,4);
+    delay(200);
+    setLiftAngle(liftDown);
+    delay(200);
+    baseControl(55,100,100,2.5); // Problem child; need to tune to properly grab blue base
+    delay(200);
+    setLiftAngle(liftUp);
+    delay(200);
+    baseTurn(10,80,300,true, true,0.5); // Cannot test these until problem child is fixed
+    delay(200);
+    baseControl(30,100,100,2.5);
+    delay(200);
+    setLiftAngle(liftHalf-100);
+    delay(200);
+    baseControl(-10,100,100,2.5);
+    delay(200);
+
+    delay(2000);
 }
 
-void autonomous() {
-  // Initialize the gryo
-  gyro = gyroInit(GYRO_PORT, 102);
-  delay(2000);
-
-  // Init Encoders
-  BLEncoder = encoderInit(QUAD_TOP_PORT_LEFT, QUAD_BOTTOM_PORT_LEFT, false);
-  BREncoder = encoderInit(QUAD_TOP_PORT_RIGHT, QUAD_BOTTOM_PORT_RIGHT, false);
-
-  setLiftAngle(liftDown);
-  liftToggle = 1;
-  delay(700);
-
-  // NOW START!
-
-  // FIRST BASE
-  baseControl(56, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftUp);
-  delay(1000);
-  baseTurn(-25, 90, 300, true, true, 1);
-  delay(200);
-  baseControl(-70, 80, 100, 2.5);
-  delay(200);
-  baseTurn(-135, 100, 300, true, true, 3);
-  delay(200);
-  driveTime(127, 127, 1.2);
-  delay(200);
-  setLiftAngle(liftHalf - 100);
-  delay(200);
-  driveTime(-127, -127, 0.5);
-  delay(200);
-
-  // SECOND BASE
-  baseTurn(-45, 100, 300, true, true, 3);
-  delay(200);
-  baseControl(-15, 80, 100, 2.5);
-  delay(200);
-  baseTurn(45, 100, 300, true, true, 3);
-  delay(200);
-  setLiftAngle(liftDown);
-  delay(200);
-  baseControl(40, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftUp);
-  delay(200);
-  baseTurn(-132.5, 100, 300, true, true, 3);
-  delay(200);
-  baseControl(45, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftHalf);
-  delay(200);
-  baseControl(-8, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftUp);
-  delay(200);
-
-  // THIRD BASE
-  baseTurn(-45, 100, 300, true, true, 3);
-  delay(200);
-  baseControl(33, 80, 100, 2.5);
-  delay(200);
-  baseTurn(45, 100, 300, true, true, 3);
-  delay(200);
-  setLiftAngle(liftDown);
-  delay(600);
-  baseControl(33, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftUp);
-  delay(500);
-  baseTurn(-135, 100, 300, true, true, 3);
-  delay(200);
-  baseControl(45, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftHalf);
-  delay(200);
-  baseControl(-25, 80, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftUp);
-  delay(200);
-
-  // FOURTH BASE
-  baseTurn(45, 100, 300, true, true, 4);
-  delay(200);
-  setLiftAngle(liftDown);
-  delay(200);
-  baseControl(55, 100, 100,
-              2.5); // Problem child; need to tune to properly grab blue base
-  delay(200);
-  setLiftAngle(liftUp);
-  delay(200);
-  baseTurn(10, 80, 300, true, true,
-           0.5); // Cannot test these until problem child is fixed
-  delay(200);
-  baseControl(30, 100, 100, 2.5);
-  delay(200);
-  setLiftAngle(liftHalf - 100);
-  delay(200);
-  baseControl(-10, 100, 100, 2.5);
-  delay(200);
-
-  delay(2000);
-}

@@ -1,38 +1,42 @@
+/**
+ * Functions for controlling the lift, during both driver control and
+ * autonomous.
+ */
+
 #include "liftControl.h"
 #include "pid.h"
 #include "utilities.h"
 
-void liftControl(void *parameter) {
-  // Separate variables to simplify tuning
-  const float kp = 0.2;
-  const float ki = 0.001; // 0.7;
-  const float kd = 0.0;
+void liftControl(void *parameter)
+{
+    // Separate variables to simplify tuning
+    const float kp = 0.2;
+    const float ki = 0.001; //0.7;
+    const float kd = 0.0;
 
-  PIDData data;
-  pidDataInit(&data, kp, ki, kd, 125, 4095, 50);
+    PIDData data;
+    pidDataInit(&data, kp, ki, kd, 125,4095, 50);
 
-  while (true) {
-    if (liftToggle == 1) {
+    while (true)
+    {
+        if (liftToggle==1)
+        {
+            int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
+            int liftPowerOut = limitMotorPower(pidNextIteration(&data, errorLiftAngle));
 
-      int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
-      //printf("lift position: %d\r\n",
-      //       analogRead(POTENTIOMETER_PORT)); // grab the latest value from lift
+            motorSet (liftMotor,liftPowerOut);
+        }
+        else
+        {
+            motorSet (liftMotor,0);
+        }
 
-      int liftPowerOut =
-          limitMotorPower(pidNextIteration(&data, errorLiftAngle));
-
-      if (ABS(errorLiftAngle) < 10) {
-        motorSet(liftMotor, 0);
-      } else {
-        motorSet(liftMotor, liftPowerOut);
-      }
-
-    } else {
-      motorSet(liftMotor, 0);
+        delay(20);
     }
-
-    delay(20);
-  }
 }
 
-void setLiftAngle(int liftAngle) { desiredLiftAngle = liftAngle; }
+void setLiftAngle(int liftAngle)
+{
+    desiredLiftAngle = liftAngle;
+}
+

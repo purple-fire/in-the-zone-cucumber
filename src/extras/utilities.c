@@ -1,16 +1,22 @@
+/**
+ * Assorted utilities
+ */
+
 #include "utilities.h"
 
-int limitMotorPower(int power) {
-  int sign = power >= 0 ? 1 : -1;
+int limitMotorPower(int power)
+{
+    int	outputPower = ABS(power);
 
-  int outputPower;
-  outputPower = ABS(power);
+    if(outputPower > MAX_POWER_OUT)
+    {
+        outputPower = MAX_POWER_OUT;
+    }
+    else if(outputPower < MIN_POWER_OUT)
+    {
+        outputPower = MIN_POWER_OUT;
+    }
 
-  if (outputPower > maxOutput) {
-    outputPower = maxOutput;
-  } else if (outputPower < minOutput) {
-    outputPower = minOutput;
-  }
-
-  return (outputPower * sign);
+    return SIGN(power) * outputPower;
 }
+
