@@ -15,9 +15,8 @@ void liftControl(void *parameter) {
     if (liftToggle == 1) {
 
       int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
-      printf("lift position: %d\r\n",
-             analogRead(POTENTIOMETER_PORT)); // grab the latest value from a
-                                              // quadrature encoder
+      //printf("lift position: %d\r\n",
+      //       analogRead(POTENTIOMETER_PORT)); // grab the latest value from lift
 
       int liftPowerOut =
           limitMotorPower(pidNextIteration(&data, errorLiftAngle));
