@@ -1,41 +1,32 @@
 #include "liftControl.h"
-#include "utilities.h"
 #include "pid.h"
+#include "utilities.h"
 
-void liftControl(void * parameter)
-{
- // Separate variables to simplify tuning
- const float kp = 0.2;
- const float ki = 0.001; //0.7;
- const float kd = 0.0;
+void liftControl(void *parameter) {
+  // Separate variables to simplify tuning
+  const float kp = 0.2;
+  const float ki = 0.001; // 0.7;
+  const float kd = 0.0;
 
+  PIDData data;
+  pidDataInit(&data, kp, ki, kd, 125, 4095, 50);
 
- PIDData data;
- pidDataInit(&data, kp, ki, kd, 125,4095, 50);
+  while (true) {
+    if (liftToggle == 1) {
 
- while (true)
- {
-	 if (liftToggle==1)
-	 {
+      int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
 
-		 int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
+      int liftPowerOut =
+          limitMotorPower(pidNextIteration(&data, errorLiftAngle));
 
-		 int liftPowerOut = limitMotorPower(pidNextIteration(&data, errorLiftAngle));
+      motorSet(liftMotor, liftPowerOut);
 
-		 motorSet (liftMotor,liftPowerOut);
+    } else {
+      motorSet(liftMotor, 0);
+    }
 
-	 }
-	 else
-	 {
-		 motorSet (liftMotor,0);
-
-	 }
-
-	 delay(20);
- }
+    delay(20);
+  }
 }
 
-void setLiftAngle(int liftAngle)
-{
-	desiredLiftAngle = liftAngle;
-}
+void setLiftAngle(int liftAngle) { desiredLiftAngle = liftAngle; }
