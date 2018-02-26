@@ -52,6 +52,9 @@ void initialize() {
     BLEncoder = encoderInit(QUAD_TOP_PORT_LEFT, QUAD_BOTTOM_PORT_LEFT, false);
     BREncoder = encoderInit(QUAD_TOP_PORT_RIGHT, QUAD_BOTTOM_PORT_RIGHT, false);
 
+    /* Calibrate the potentiometer */
+    analogCalibrate(POTENTIOMETER_PORT);
+
     /* Start the lift task here since it is needed in both autonomous and driver
      * control.
      */

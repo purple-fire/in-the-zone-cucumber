@@ -16,11 +16,6 @@
 #include "pid.h"
 #include "liftControl.h"
 
-/* Globals so that values can be seen from outside functions.
- * These may be obsolete, sincne PROS does not have a built-in monitor of
- * globals.
- */
-
 int tickGoal=0;
 
 int rightError;
@@ -33,14 +28,6 @@ int turnError;
 int turnPower;
 
 int gyroValue;
-
-void stopMotors ()
-{
-    motorStop(rightMotorF);
-    motorStop(rightMotorR);
-    motorStop(leftMotorF);
-    motorStop(leftMotorR);
-}
 
 void baseControl(float target, float power, float integralRange, float timeOut)
 {
@@ -70,16 +57,14 @@ void baseControl(float target, float power, float integralRange, float timeOut)
 
     while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
 
-        rightError = encoderGet(BREncoder) - target;
+        rightError = target - encoderGet(BREncoder);
         rightPower =  limitMotorPower(pidNextIteration(&rightData, rightError));
 
-        leftError = encoderGet(BLEncoder) - target;
+        leftError = target - encoderGet(BLEncoder);
         leftPower =  limitMotorPower(pidNextIteration(&leftData, leftError));
 
-        motorSet (rightMotorF,-rightPower);
-        motorSet (rightMotorR,-rightPower);
-        motorSet (leftMotorF,-leftPower);
-        motorSet (leftMotorR,-leftPower);
+        rightMotorsSet(rightPower);
+        leftMotorsSet(leftPower);
 
         if((ABS(leftError)>60)||(ABS(rightError)>60)){
             T1 = millis();
@@ -87,7 +72,7 @@ void baseControl(float target, float power, float integralRange, float timeOut)
 
         delay(20);
     }
-    stopMotors();
+    stopChassis();
 }
 
 void baseTurn(float target, float power, float integralRange,
@@ -111,20 +96,21 @@ void baseTurn(float target, float power, float integralRange,
     while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
         gyroValue = gyroGet(gyro);
 
-        turnError = gyroValue - target;
-
+        turnError = target - gyroValue;
         turnPower = limitMotorPower(pidNextIteration(&data, turnError));
 
         // TODO Should we check that each side moves the same amount and adjust
         // them afterwards if not?
         if(rightToggle){
-            motorSet (rightMotorF,-turnPower);
-            motorSet (rightMotorR,-turnPower);
+            rightMotorsSet(turnPower);
+        } else {
+            rightMotorsSet(0);
         }
 
         if(leftToggle){
-            motorSet (leftMotorF,turnPower);
-            motorSet (leftMotorR,turnPower);
+            leftMotorsSet(-turnPower);
+        } else {
+            leftMotorsSet(0);
         }
 
         if((ABS(turnError)>10)){
@@ -133,40 +119,7 @@ void baseTurn(float target, float power, float integralRange,
 
         delay(20);
     }
-    stopMotors ();
-}
-
-/**
- * Obsolete time-based turn function
- * TODO Remove
- */
-void wallTurn(float target, float power, bool leftToggle, bool rightToggle)
-{
-    gyroReset (gyro);
-    gyroValue = gyroGet(gyro);
-
-    while (ABS(gyroValue)<target) {
-        turnError = gyroValue - target;
-        gyroValue = gyroGet(gyro);
-
-        if(rightToggle){
-            motorSet (rightMotorF,-power);
-            motorSet (rightMotorR,-power);
-        }
-        if(leftToggle){
-            motorSet (leftMotorF,power);
-            motorSet (leftMotorR,power);
-        }
-    }
-    if(rightToggle){
-        motorSet (rightMotorF,10);
-        motorSet (rightMotorR,10);
-    }
-    if(leftToggle){
-        motorSet (leftMotorF,-10);
-        motorSet (leftMotorR,-10);
-    }
-    delay(200);
+    stopChassis ();
 }
 
 /**
@@ -181,17 +134,15 @@ void driveTime(float powerL, float powerR, float timeOut)
     timeOut = timeOut*1000;
 
     while (T1 > (millis() - timeOut)) {
-        motorSet (rightMotorF,powerR);
-        motorSet (rightMotorR,powerR);
-        motorSet (leftMotorF,powerL);
-        motorSet (leftMotorR,powerL);
+        rightMotorsSet(powerR);
+        leftMotorsSet(powerL);
     }
-    stopMotors ();
+    stopChassis ();
 }
 
 void autonomous ()
 {
-    setLiftAngle(liftDown);
+    setLiftAngle(LIFT_DOWN);
     liftToggle = 1;
     delay(700);
 
@@ -200,7 +151,7 @@ void autonomous ()
     //FIRST BASE
     baseControl(56,80,100,2.5);
     delay(200);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     delay(1000);
     baseTurn(-25,90,300,true,true,1);
     delay(200);
@@ -210,7 +161,7 @@ void autonomous ()
     delay(200);
     driveTime(127,127,1.2);
     delay(200);
-    setLiftAngle(liftHalf-100);
+    setLiftAngle(LIFT_HALF-100);
     delay(200);
     driveTime(-127,-127,0.5);
     delay(200);
@@ -222,21 +173,21 @@ void autonomous ()
     delay(200);
     baseTurn(45,100,300,true,true,3);
     delay(200);
-    setLiftAngle(liftDown);
+    setLiftAngle(LIFT_DOWN);
     delay(200);
     baseControl(40,80,100,2.5);
     delay(200);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     delay(200);
     baseTurn(-132.5,100,300,true,true,3);
     delay(200);
     baseControl(45,80,100,2.5);
     delay(200);
-    setLiftAngle(liftHalf);
+    setLiftAngle(LIFT_HALF);
     delay(200);
     baseControl(-8,80,100,2.5);
     delay(200);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     delay(200);
 
     //THIRD BASE
@@ -246,37 +197,37 @@ void autonomous ()
     delay(200);
     baseTurn(45,100,300,true,true,3);
     delay(200);
-    setLiftAngle(liftDown);
+    setLiftAngle(LIFT_DOWN);
     delay(600);
     baseControl(33,80,100,2.5);
     delay(200);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     delay(500);
     baseTurn(-135,100,300,true,true,3);
     delay(200);
     baseControl(45,80,100,2.5);
     delay(200);
-    setLiftAngle(liftHalf);
+    setLiftAngle(LIFT_HALF);
     delay(200);
     baseControl(-25,80,100,2.5);
     delay(200);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     delay(200);
 
     //FOURTH BASE
     baseTurn(45,100,300,true,true,4);
     delay(200);
-    setLiftAngle(liftDown);
+    setLiftAngle(LIFT_DOWN);
     delay(200);
     baseControl(55,100,100,2.5); // Problem child; need to tune to properly grab blue base
     delay(200);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     delay(200);
     baseTurn(10,80,300,true, true,0.5); // Cannot test these until problem child is fixed
     delay(200);
     baseControl(30,100,100,2.5);
     delay(200);
-    setLiftAngle(liftHalf-100);
+    setLiftAngle(LIFT_HALF-100);
     delay(200);
     baseControl(-10,100,100,2.5);
     delay(200);

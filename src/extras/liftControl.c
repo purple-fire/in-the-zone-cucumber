@@ -7,6 +7,10 @@
 #include "pid.h"
 #include "utilities.h"
 
+int liftToggle = false;
+int desiredLiftAngle = LIFT_UP;
+int liftPosition;
+
 void liftControl(void *parameter)
 {
     // Separate variables to simplify tuning
@@ -15,20 +19,21 @@ void liftControl(void *parameter)
     const float kd = 0.0;
 
     PIDData data;
-    pidDataInit(&data, kp, ki, kd, 125,4095, 50);
+    pidDataInit(&data, kp, ki, kd, 125, 4095, 50);
 
     while (true)
     {
-        if (liftToggle==1)
+        if (liftToggle)
         {
-            int errorLiftAngle = desiredLiftAngle - analogRead(POTENTIOMETER_PORT);
-            int liftPowerOut = limitMotorPower(pidNextIteration(&data, errorLiftAngle));
+            liftPosition = analogReadCalibrated(POTENTIOMETER_PORT);
+            int errorLiftAngle = desiredLiftAngle - liftPosition;
+            int liftPowerOut = pidNextIteration(&data, errorLiftAngle);
 
             motorSet (liftMotor,liftPowerOut);
         }
         else
         {
-            motorSet (liftMotor,0);
+            motorStop(liftMotor);
         }
 
         delay(20);

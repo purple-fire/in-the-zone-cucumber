@@ -19,20 +19,11 @@
 // H-Drive using 4 Inputs
 void driveTrain(void *parameter) {
     while (true) {
-        motorSet(rightMotorF, -(joystickGetAnalog(1, CRY)) * 0.8);
-        motorSet(leftMotorF, (joystickGetAnalog(1, CLY)) * 0.8);
-        motorSet(rightMotorR, -(joystickGetAnalog(1, CRY)) * 0.8);
-        motorSet(leftMotorR, (joystickGetAnalog(1, CLY)) * 0.8);
+        rightMotorsSet(joystickGetAnalog(1, CRY) * 0.8);
+        leftMotorsSet(joystickGetAnalog(1, CLY) * 0.8);
         // Motor values can only be updated every 20ms
         delay(20);
     }
-}
-
-void stopChassis() {
-    motorSet(rightMotorF, 10);
-    motorSet(leftMotorF, 10);
-    motorSet(rightMotorR, 10);
-    motorSet(leftMotorR, 10);
 }
 
 void startAutoPilot(void *parameter) {
@@ -45,7 +36,7 @@ void operatorControl() {
     TaskHandle autoPilotHandle;
     TaskHandle driveTrainHandle = taskCreate(driveTrain,
             TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
-    setLiftAngle(liftUp);
+    setLiftAngle(LIFT_UP);
     liftToggle = 1;
 
     int autoPilot = 0;
@@ -65,11 +56,11 @@ void operatorControl() {
         }
         if(autoPilot==0){
             if (joystickGetDigital(1, 6, JOY_UP) == 1) {
-                setLiftAngle(liftUp);
+                setLiftAngle(LIFT_UP);
             } else if (joystickGetDigital(1, 6, JOY_DOWN) == 1) {
-                setLiftAngle(liftDown);
+                setLiftAngle(LIFT_DOWN);
             } else if (joystickGetDigital(1, 5, JOY_DOWN) == 1) {
-                setLiftAngle(liftHalf);
+                setLiftAngle(LIFT_HALF);
             }
         }
 

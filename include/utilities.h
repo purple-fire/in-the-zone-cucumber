@@ -28,3 +28,20 @@
  */
 int limitMotorPower(int power);
 
+/**
+ * Set the power of both left motors.
+ * Positive is forwards, negative is reverse.
+ */
+void leftMotorsSet(int power);
+
+/**
+ * Sets the power of both right motors.
+ * Positive is forwards, negative is reverse.
+ */
+void rightMotorsSet(int power);
+
+/**
+ * Bring the chassis to a complete stop.
+ */
+void stopChassis(void);
+

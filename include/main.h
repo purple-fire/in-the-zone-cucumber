@@ -52,6 +52,20 @@ Gyro gyro;
 Encoder BLEncoder;
 Encoder BREncoder;
 
+/* Globals so that values can be seen from outside functions. */
+extern int tickGoal,
+           rightError,
+           rightPower,
+           leftError,
+           leftPower,
+           turnError,
+           turnPower,
+           gyroValue,
+
+           liftToggle,
+           desiredLiftAngle,
+           liftPosition;
+
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
