@@ -16,8 +16,10 @@
 #include "pid.h"
 #include "liftControl.h"
 
-// H-Drive using 4 Inputs
-void driveTrain(void *parameter) {
+/**
+ * Driver control with tank-style controls.
+ */
+static void driveTank(void *parameter) {
     while (true) {
         /* TODO limitMotorPower() is used so that the robot will brake when the
          * joy sticks are not pushed. This means that power will always be
@@ -26,24 +28,39 @@ void driveTrain(void *parameter) {
          * is already stationary, or the joystick has been stationary for a
          * certain amount of time the motors will be sent a power of 0.
          */
-        rightMotorsSet(limitMotorPower(joystickGetAnalog(1, CRY) * 0.8));
-        leftMotorsSet(limitMotorPower(joystickGetAnalog(1, CLY) * 0.8));
+        rightMotorsSetSmooth(joystickGetAnalog(1, CRY) * MAX_POWER_OUT / 127);
+        leftMotorsSetSmooth( joystickGetAnalog(1, CLY) * MAX_POWER_OUT / 127);
         // Motor values can only be updated every 20ms
         delay(20);
     }
 }
 
-void startAutoPilot(void *parameter) {
-    stopChassis();
+/**
+ * Driver control with archade-style controls.
+ * /
+static void driveArchade(void *parameter) {
+    while (true) {
+        rightMotorsSetSmooth(
+                (joystickGetAnalog(1, CLY) + joystickGetAnalog(1, CRX))
+                * MAX_POWER_OUT / 127);
+        leftMotorsSetSmooth(
+                (joystickGetAnalog(1, CLY) - joystickGetAnalog(1, CRX))
+                * MAX_POWER_OUT / 127);
+
+        delay(20);
+    }
+}
+*/
+
+static void startAutoPilot(void *parameter) {
+    stopChassisSmooth();
     delay(500);
-    motorStopAll(); /* stopChassis() brakes all motors, this lets them rest */
-    delay(20);
     autonomous();
 }
 
 void operatorControl() {
     TaskHandle autoPilotHandle;
-    TaskHandle driveTrainHandle = taskCreate(driveTrain,
+    TaskHandle driveTrainHandle = taskCreate(driveTank,
             TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
     setLiftAngle(LIFT_UP);
     liftToggle = 1;
@@ -60,7 +77,7 @@ void operatorControl() {
         else if((joystickGetDigital(1, 8, JOY_LEFT) == 1)&&(autoPilot==1)){
             autoPilot = 0;
             taskDelete(autoPilotHandle);
-            driveTrainHandle = taskCreate(driveTrain,
+            driveTrainHandle = taskCreate(driveTank,
                     TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
         }
         if(autoPilot==0){

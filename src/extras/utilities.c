@@ -47,3 +47,40 @@ void stopChassis(void) {
     motorSet(leftMotorR,  MIN_POWER_OUT);
 }
 
+bool motorSetSmooth(unsigned char channel, int power) {
+    int curPower = motorGet(channel);
+    if (ABS(curPower - power) <= 1) {
+        /* Due to integer rounding, the normal calculation will not always
+         * converge to power when two are close together
+         */
+        motorSet(channel, power);
+        return true;
+    } else {
+        int nextPower = curPower * (1.0 - SMOOTH_FACTOR)
+                      + power * SMOOTH_FACTOR;
+        motorSet(channel, nextPower);
+        return nextPower == power;
+    }
+}
+
+bool leftMotorsSetSmooth(int power) {
+    return motorSetSmooth(leftMotorF, power)
+        && motorSetSmooth(leftMotorR, power);
+}
+
+bool rightMotorsSetSmooth(int power) {
+    return motorSetSmooth(rightMotorF, power)
+        && motorSetSmooth(rightMotorR, power);
+}
+
+void stopChassisSmooth(void) {
+    /* TODO Should MIN_POWER_OUT be used instead, like stopChassis()? */
+    while (   !motorSetSmooth(rightMotorF, 0)
+            || !motorSetSmooth(rightMotorR, 0)
+            || !motorSetSmooth(leftMotorF, 0)
+            || !motorSetSmooth(leftMotorR, 0)) {
+        /* Just loop until all succede */
+        delay(20);
+    }
+}
+
