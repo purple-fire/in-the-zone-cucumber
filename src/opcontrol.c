@@ -19,8 +19,15 @@
 // H-Drive using 4 Inputs
 void driveTrain(void *parameter) {
     while (true) {
-        rightMotorsSet(joystickGetAnalog(1, CRY) * 0.8);
-        leftMotorsSet(joystickGetAnalog(1, CLY) * 0.8);
+        /* TODO limitMotorPower() is used so that the robot will brake when the
+         * joy sticks are not pushed. This means that power will always be
+         * applied to the motors and the robot will make the really annoying
+         * humming sound. Something should probably be done so that if the robot
+         * is already stationary, or the joystick has been stationary for a
+         * certain amount of time the motors will be sent a power of 0.
+         */
+        rightMotorsSet(limitMotorPower(joystickGetAnalog(1, CRY) * 0.8));
+        leftMotorsSet(limitMotorPower(joystickGetAnalog(1, CLY) * 0.8));
         // Motor values can only be updated every 20ms
         delay(20);
     }
@@ -29,6 +36,8 @@ void driveTrain(void *parameter) {
 void startAutoPilot(void *parameter) {
     stopChassis();
     delay(500);
+    motorStopAll(); /* stopChassis() brakes all motors, this lets them rest */
+    delay(20);
     autonomous();
 }
 

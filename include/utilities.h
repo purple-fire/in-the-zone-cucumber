@@ -25,6 +25,8 @@
 /**
  * Limits the magnitude of a motor power between MAX_POWER_OUT and
  * MIN_POWER_OUT.
+ * This sets a motor power of 0 to MIN_POWER_OUT (non-0) so that the motor will
+ * brake instead of coast. To have a motor coast, motorStop() should be used.
  */
 int limitMotorPower(int power);
 

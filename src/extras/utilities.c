@@ -41,9 +41,9 @@ void rightMotorsSet(int power) {
 }
 
 void stopChassis(void) {
-    motorStop(rightMotorF);
-    motorStop(rightMotorR);
-    motorStop(leftMotorF);
-    motorStop(leftMotorR);
+    motorSet(rightMotorF, MIN_POWER_OUT);
+    motorSet(rightMotorR, MIN_POWER_OUT);
+    motorSet(leftMotorF,  MIN_POWER_OUT);
+    motorSet(leftMotorR,  MIN_POWER_OUT);
 }
 
