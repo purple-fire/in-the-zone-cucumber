@@ -29,6 +29,12 @@ int turnPower;
 
 int gyroValue;
 
+/* TODO Figure out a way to update these in a thread-safe fashion when
+ * baseControl() is not running
+ */
+int rightEncoderValue;
+int leftEncoderValue;
+
 void baseControl(float target, float power, float integralRange, float timeOut)
 {
 
@@ -57,10 +63,13 @@ void baseControl(float target, float power, float integralRange, float timeOut)
 
     while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
 
-        rightError = target - encoderGet(BREncoder);
+        rightEncoderValue = encoderGet(BREncoder);
+        leftEncoderValue = encoderGet(BLEncoder);
+
+        rightError = target - rightEncoderValue;
         rightPower =  limitMotorPower(pidNextIteration(&rightData, rightError));
 
-        leftError = target - encoderGet(BLEncoder);
+        leftError = target - leftEncoderValue;
         leftPower =  limitMotorPower(pidNextIteration(&leftData, leftError));
 
         rightMotorsSet(rightPower);

@@ -60,11 +60,14 @@ extern int tickGoal,
            leftPower,
            turnError,
            turnPower,
-           gyroValue,
 
            liftToggle,
            desiredLiftAngle,
-           liftPosition;
+           liftPosition,
+
+           gyroValue,
+           rightEncoderValue,
+           leftEncoderValue;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task

@@ -11,9 +11,15 @@
  */
 
 #include "main.h"
+#include "debug.h"
 #include "liftControl.h"
 
-TaskHandle liftControlHandle;
+/**
+ * Task handles for the lift control and debuging tasks.
+ * These is a global variable to suppress warnings about the unused variables
+ * because the tasks are created upon initialization but never deleted.
+ */
+TaskHandle liftControlHandle, debugTask;
 
 /*
  * Runs pre-initialization code. This function will be started in kernel mode
@@ -60,5 +66,9 @@ void initialize() {
      */
     liftControlHandle = taskCreate(
             liftControl, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+
+    /* Initialize debugging. */
+    debugTask = taskCreate(debugMonitor,
+            TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 }
 
