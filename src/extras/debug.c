@@ -27,16 +27,16 @@ static const char *debugTable[DB_TABLE_ROWS][DB_TABLE_COLS] = {
     { "rightPower",     "liftTarget",   "rightEncoder" },
     { "leftError",      "liftPosition", "leftEncoder" },
     { "leftPower",      NULL,           "potentiometer" },
-    { "turnError",      NULL,           NULL },
-    { "turnPower",      NULL,           NULL },
+    { "turnError",      NULL,           "joy L" },
+    { "turnPower",      NULL,           "joy R" },
 };
 
 static void debugPrintTable(void) {
     erase();
 
-    hline('-', DB_TABLE_COLS * DB_TABLE_COL_WIDTH + 1);
+    /* mvhline(0, 0, '-', DB_TABLE_COLS * DB_TABLE_COL_WIDTH + 1); */
     for (int i = 0; i < DB_TABLE_COLS; i++) {
-        mvvline(1, i * DB_TABLE_COL_WIDTH, '|', DB_TABLE_ROWS);
+        /* mvvline(1, i * DB_TABLE_COL_WIDTH, '|', DB_TABLE_ROWS); */
 
         for (int j = 0; j < DB_TABLE_ROWS; j++) {
             const char *label = debugTable[j][i];
@@ -45,8 +45,8 @@ static void debugPrintTable(void) {
             }
         }
     }
-    mvvline(1, DB_TABLE_COLS * DB_TABLE_COL_WIDTH, '|', DB_TABLE_ROWS);
-    mvhline(DB_TABLE_ROWS, 0, '-', DB_TABLE_COLS * DB_TABLE_COL_WIDTH + 1);
+    /* mvvline(1, DB_TABLE_COLS * DB_TABLE_COL_WIDTH, '|', DB_TABLE_ROWS); */
+    /* mvhline(DB_TABLE_ROWS, 0, '-', DB_TABLE_COLS * DB_TABLE_COL_WIDTH + 1); */
 }
 
 void debugMonitor(void *parameter) {
@@ -75,12 +75,13 @@ void debugMonitor(void *parameter) {
         dbTableValuePrintf(2, 1, "%8d", desiredLiftAngle);
         dbTableValuePrintf(2, 1, "%8d", liftPosition);
 
-        dbTableValuePrintf(1, 2, "%8d", gyroValue);
-        dbTableValuePrintf(2, 2, "%8d", rightEncoderValue);
-        dbTableValuePrintf(3, 2, "%8d", leftEncoderValue);
+        dbTableValuePrintf(1, 2, "%8d", gyroGet(gyro) + gyroOffset);
+        dbTableValuePrintf(2, 2, "%8d", encoderGet(BREncoder));
+        dbTableValuePrintf(3, 2, "%8d", encoderGet(BLEncoder));
         dbTableValuePrintf(4, 2, "%8d", liftPosition);
+        dbTableValuePrintf(5, 2, "%+4d:%+4d", joystickGetAnalog(1, CRY), joystickGetAnalog(1, CRX));
+        dbTableValuePrintf(6, 2, "%+4d:%+4d", joystickGetAnalog(1, CLY), joystickGetAnalog(1, CLX));
 
-        move(DB_TABLE_ROWS, DB_TABLE_COLS * DB_TABLE_COL_WIDTH);
         fflush(stdout);
 
         /* Have to do this because output is buffered */

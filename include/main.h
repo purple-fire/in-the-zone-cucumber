@@ -66,6 +66,7 @@ extern int tickGoal,
            liftPosition,
 
            gyroValue,
+           gyroOffset,
            rightEncoderValue,
            leftEncoderValue;
 

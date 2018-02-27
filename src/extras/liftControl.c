@@ -25,7 +25,7 @@ void liftControl(void *parameter)
     {
         if (liftToggle)
         {
-            liftPosition = analogReadCalibrated(POTENTIOMETER_PORT);
+            liftPosition = analogRead(POTENTIOMETER_PORT);
             int errorLiftAngle = desiredLiftAngle - liftPosition;
             int liftPowerOut = pidNextIteration(&data, errorLiftAngle);
 

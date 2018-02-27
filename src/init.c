@@ -49,7 +49,7 @@ void initializeIO() {
  */
 void initialize() {
     /* Initialize the gryo */
-    gyro = gyroInit(GYRO_PORT, 102);
+    gyro = gyroInit(GYRO_PORT, 259);
     delay(2000); /* TODO Does gyroInit() do this */
 
     /* Initialize encoders
@@ -59,7 +59,7 @@ void initialize() {
     BREncoder = encoderInit(QUAD_TOP_PORT_RIGHT, QUAD_BOTTOM_PORT_RIGHT, false);
 
     /* Calibrate the potentiometer */
-    analogCalibrate(POTENTIOMETER_PORT);
+    /* analogCalibrate(POTENTIOMETER_PORT); */
 
     /* Start the lift task here since it is needed in both autonomous and driver
      * control.

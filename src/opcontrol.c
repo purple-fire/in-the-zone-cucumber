@@ -16,83 +16,120 @@
 #include "pid.h"
 #include "liftControl.h"
 
+typedef enum {
+    DRIVE_AUTO,
+    DRIVE_TANK,
+    DRIVE_ARCHADE
+} DriveMode;
+
+DriveMode driveMode;
+
 /**
  * Driver control with tank-style controls.
  */
 static void driveTank(void *parameter) {
+    stopChassis();
+
     while (true) {
-        /* TODO limitMotorPower() is used so that the robot will brake when the
-         * joy sticks are not pushed. This means that power will always be
-         * applied to the motors and the robot will make the really annoying
-         * humming sound. Something should probably be done so that if the robot
-         * is already stationary, or the joystick has been stationary for a
-         * certain amount of time the motors will be sent a power of 0.
-         */
-        rightMotorsSetSmooth(joystickGetAnalog(1, CRY) * MAX_POWER_OUT / 127);
-        leftMotorsSetSmooth( joystickGetAnalog(1, CLY) * MAX_POWER_OUT / 127);
+        if (driveMode == DRIVE_TANK) {
+            int joyRight = joystickGetAnalog(1, CRY);
+            int joyLeft = joystickGetAnalog(1, CLY);
+
+            if (ABS(joyRight) <= 8) {
+                rightMotorsBrake();
+            } else {
+                rightMotorsSet(joyRight * MAX_POWER_OUT / 127);
+            }
+
+            if (ABS(joyLeft) <= 8) {
+                leftMotorsBrake();
+            } else {
+                leftMotorsSet(joyLeft * MAX_POWER_OUT / 127);
+            }
+
+        } else if (driveMode == DRIVE_ARCHADE) {
+            int joyRight = joystickGetAnalog(1, CRX);
+            int joyLeft = joystickGetAnalog(1, CLY);
+
+            int leftPower  = joyLeft + joyRight;
+            int rightPower = joyLeft - joyRight;
+
+            if (ABS(leftPower) <= 8) {
+                leftMotorsBrake();
+            } else {
+                leftMotorsSet(leftPower * MAX_POWER_OUT / 127);
+            }
+
+            if (ABS(rightPower) <= 8) {
+                rightMotorsBrake();
+            } else {
+                rightMotorsSet(rightPower * MAX_POWER_OUT / 127);
+            }
+
+        } else {
+            /* Stop for invalid modes */
+            stopChassis();
+        }
+
         // Motor values can only be updated every 20ms
         delay(20);
     }
 }
 
-/**
- * Driver control with archade-style controls.
- * /
-static void driveArchade(void *parameter) {
-    while (true) {
-        rightMotorsSetSmooth(
-                (joystickGetAnalog(1, CLY) + joystickGetAnalog(1, CRX))
-                * MAX_POWER_OUT / 127);
-        leftMotorsSetSmooth(
-                (joystickGetAnalog(1, CLY) - joystickGetAnalog(1, CRX))
-                * MAX_POWER_OUT / 127);
-
-        delay(20);
-    }
-}
-*/
-
 static void startAutoPilot(void *parameter) {
     stopChassisSmooth();
-    delay(500);
     autonomous();
 }
 
 void operatorControl() {
-    TaskHandle autoPilotHandle;
-    TaskHandle driveTrainHandle = taskCreate(driveTank,
+    TaskHandle autoPilotHandle = NULL;
+    TaskHandle driverControlHandle = taskCreate(driveTank,
             TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
     setLiftAngle(LIFT_UP);
     liftToggle = 1;
 
-    int autoPilot = 0;
+    driveMode = DRIVE_TANK;
+
     while (true) {
 
-        if((joystickGetDigital(1, 8, JOY_RIGHT) == 1)&&(autoPilot==0)){
-            autoPilot = 1;
-            taskDelete(driveTrainHandle);
+        if (driveMode != DRIVE_AUTO
+                && joystickGetDigital(1, 8, JOY_RIGHT)){
+            driveMode = DRIVE_AUTO;
+            taskDelete(driverControlHandle);
+            driverControlHandle = NULL;
             autoPilotHandle = taskCreate(startAutoPilot,
                     TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+        } else if (joystickGetDigital(1, 8, JOY_UP)) {
+            if (driveMode == DRIVE_AUTO) {
+                taskDelete(autoPilotHandle);
+                autoPilotHandle = NULL;
+                driverControlHandle = taskCreate(driveTank,
+                        TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+            }
+
+            driveMode = DRIVE_TANK;
+        } else if (joystickGetDigital(1, 8, JOY_DOWN)) {
+            if (driveMode == DRIVE_AUTO) {
+                taskDelete(autoPilotHandle);
+                autoPilotHandle = NULL;
+                driverControlHandle = taskCreate(driveTank,
+                        TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+            }
+
+            driveMode = DRIVE_ARCHADE;
         }
-        else if((joystickGetDigital(1, 8, JOY_LEFT) == 1)&&(autoPilot==1)){
-            autoPilot = 0;
-            taskDelete(autoPilotHandle);
-            driveTrainHandle = taskCreate(driveTank,
-                    TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
-        }
-        if(autoPilot==0){
-            if (joystickGetDigital(1, 6, JOY_UP) == 1) {
+
+        if (driveMode != DRIVE_AUTO) {
+            if (joystickGetDigital(1, 6, JOY_UP)) {
                 setLiftAngle(LIFT_UP);
-            } else if (joystickGetDigital(1, 6, JOY_DOWN) == 1) {
+            } else if (joystickGetDigital(1, 6, JOY_DOWN)) {
                 setLiftAngle(LIFT_DOWN);
-            } else if (joystickGetDigital(1, 5, JOY_DOWN) == 1) {
+            } else if (joystickGetDigital(1, 5, JOY_DOWN)) {
                 setLiftAngle(LIFT_HALF);
             }
         }
 
-        // Motor values can only be updated every 20ms
-        delay(20);
+        delay(50);
     }
-    taskDelete(driveTrainHandle);
 }
 

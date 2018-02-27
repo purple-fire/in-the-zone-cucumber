@@ -28,6 +28,7 @@ int turnError;
 int turnPower;
 
 int gyroValue;
+int gyroOffset = 0;
 
 /* TODO Figure out a way to update these in a thread-safe fashion when
  * baseControl() is not running
@@ -87,11 +88,13 @@ void baseControl(float target, float power, float integralRange, float timeOut)
 void baseTurn(float target, float power, float integralRange,
         bool leftToggle, bool rightToggle, float timeOut)
 {
-
-    float kp = 0.25;
-    float ki = 0.02;
-    float kd = 0.9;
-    float maxPower = power;
+    const float kp = 2.5;
+    const float ki = 0.2;
+    const float kd = 9.0;
+    /* const float kp = 0.5; */
+    /* const float ki = 0.0; */
+    /* const float kd = 0.0; */
+    const float maxPower = power;
 
     PIDData data;
     pidDataInit(&data, kp, ki, kd, maxPower, 3600, integralRange);
@@ -103,7 +106,7 @@ void baseTurn(float target, float power, float integralRange,
     timeOut = timeOut*1000;
 
     while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
-        gyroValue = gyroGet(gyro);
+        gyroValue = gyroGet(gyro) + gyroOffset;
 
         turnError = target - gyroValue;
         turnPower = limitMotorPower(pidNextIteration(&data, turnError));
@@ -122,7 +125,7 @@ void baseTurn(float target, float power, float integralRange,
             leftMotorsSet(0);
         }
 
-        if((ABS(turnError)>10)){
+        if(ABS(turnError)>2){
             T1 = millis();
         }
 
@@ -151,46 +154,74 @@ void driveTime(float powerL, float powerR, float timeOut)
 
 void autonomous ()
 {
-    setLiftAngle(LIFT_DOWN);
+    gyroReset(gyro);
+
+    //NOW START!
+
+    /*
+    setLiftAngle(LIFT_UP);
     liftToggle = 1;
     delay(700);
 
-    //NOW START!
+    baseTurn(90, 80, 100, true, true, 5.0);
+    delay(2000);
+
+    baseTurn(45, 80, 100, true, true, 5.0);
+    delay(2000);
+
+    baseTurn(-20, 80, 100, true, true, 5.0);
+    delay(2000);
+
+    baseTurn(-135, 80, 100, true, true, 5.0);
+    delay(2000);
+
+    baseTurn(0, 80, 100, true, true, 5.0);
+
+    return;
+    */
+
+    setLiftAngle(LIFT_DOWN);
+    liftToggle = 1;
+    delay(700);
 
     //FIRST BASE
     baseControl(56,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_UP);
     delay(1000);
-    baseTurn(-25,90,300,true,true,1);
+    baseTurn(-26,90,300,true,true,1);
     delay(200);
-    baseControl(-70,80,100,2.5);
+    baseControl(-60,80,100,2.5);
     delay(200);
     baseTurn(-135,100,300,true,true,3);
     delay(200);
+    setLiftAngle(LIFT_HALF-200);
     driveTime(127,127,1.2);
-    delay(200);
-    setLiftAngle(LIFT_HALF-100);
     delay(200);
     driveTime(-127,-127,0.5);
     delay(200);
 
+    baseTurn(-135, 80, 300, true, true, 1.0);
+
     //SECOND BASE
+    setLiftAngle(LIFT_UP);
+    delay(200);
     baseTurn(-45,100,300,true,true,3);
     delay(200);
-    baseControl(-15,80,100,2.5);
+    baseControl(-23,80,100,2.5);
     delay(200);
     baseTurn(45,100,300,true,true,3);
     delay(200);
     setLiftAngle(LIFT_DOWN);
-    delay(200);
-    baseControl(40,80,100,2.5);
+    delay(500);
+    baseControl(24,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_UP);
+    delay(500);
+    baseTurn(360-135,100,300,true,true,3);
+    gyroOffset = (gyroOffset - 360) % 360;
     delay(200);
-    baseTurn(-132.5,100,300,true,true,3);
-    delay(200);
-    baseControl(45,80,100,2.5);
+    baseControl(27,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_HALF);
     delay(200);
@@ -208,13 +239,13 @@ void autonomous ()
     delay(200);
     setLiftAngle(LIFT_DOWN);
     delay(600);
-    baseControl(33,80,100,2.5);
+    baseControl(32,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_UP);
     delay(500);
     baseTurn(-135,100,300,true,true,3);
     delay(200);
-    baseControl(45,80,100,2.5);
+    baseControl(28,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_HALF);
     delay(200);

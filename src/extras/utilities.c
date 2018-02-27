@@ -47,6 +47,20 @@ void stopChassis(void) {
     motorSet(leftMotorR,  MIN_POWER_OUT);
 }
 
+void motorBrake(unsigned char channel) {
+    motorSet(channel, -SIGN(motorGet(channel)));
+}
+
+void rightMotorsBrake(void) {
+    motorBrake(rightMotorF);
+    motorBrake(rightMotorR);
+}
+
+void leftMotorsBrake(void) {
+    motorBrake(leftMotorF);
+    motorBrake(leftMotorR);
+}
+
 bool motorSetSmooth(unsigned char channel, int power) {
     int curPower = motorGet(channel);
     if (ABS(curPower - power) <= 1) {
@@ -69,8 +83,8 @@ bool leftMotorsSetSmooth(int power) {
 }
 
 bool rightMotorsSetSmooth(int power) {
-    return motorSetSmooth(rightMotorF, power)
-        && motorSetSmooth(rightMotorR, power);
+    return motorSetSmooth(rightMotorF, -power)
+        && motorSetSmooth(rightMotorR, -power);
 }
 
 void stopChassisSmooth(void) {
@@ -83,4 +97,19 @@ void stopChassisSmooth(void) {
         delay(20);
     }
 }
+
+void motorBrakeSmooth(unsigned char channel) {
+    motorSetSmooth(channel, -SIGN(motorGet(channel)));
+}
+
+void rightMotorsBrakeSmooth(void) {
+    motorBrakeSmooth(rightMotorF);
+    motorBrakeSmooth(rightMotorR);
+}
+
+void leftMotorsBrakeSmooth(void) {
+    motorBrakeSmooth(leftMotorF);
+    motorBrakeSmooth(leftMotorR);
+}
+
 

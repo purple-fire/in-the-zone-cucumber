@@ -25,7 +25,7 @@
 #define ABS(x) ((x) >= 0 ? (x) : -(x))
 #define SIGN(x) ((x) >= 0 ? 1 : -1)
 
-#define INCHES_TO_TICKS(inches) ((inches) * 360 / WHEEL_CIRCUMFERENCE)
+#define INCHES_TO_TICKS(inches) ((inches) * 360.0 / WHEEL_CIRCUMFERENCE)
 
 /**
  * Limits the magnitude of a motor power between MAX_POWER_OUT and
@@ -51,6 +51,12 @@ void rightMotorsSet(int power);
  * Bring the chassis to a complete stop.
  */
 void stopChassis(void);
+
+void motorBrake(unsigned char channel);
+
+void rightMotorsBrake(void);
+
+void leftMotorsBrake(void);
 
 /**
  * Sets the power of a motor towards a specified power based on the smoothing
@@ -97,4 +103,11 @@ bool rightMotorsSetSmooth(int power);
  * This funciton blocks until all motor values are set to 0 by motorSetSmooth().
  */
 void stopChassisSmooth(void);
+
+void motorBrakeSmooth(unsigned char channel);
+
+void rightMotorsBrakeSmooth(void);
+
+void leftMotorsBrakeSmooth(void);
+
 
