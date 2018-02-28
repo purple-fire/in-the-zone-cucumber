@@ -8,7 +8,8 @@
 void pidDataReset(PIDData *data)
 {
     data->lastError = 0.0;
-    data->lastIntegral = 0.0;
+    data->integral = 0.0;
+    data->errorCount = 0;
 }
 
 void pidDataInit(PIDData *data,
@@ -25,7 +26,8 @@ void pidDataInit(PIDData *data,
     data->minimumInput= -inputRange;
 
     data->lastError = 0.0;
-    data->lastIntegral = 0.0;
+    data->integral = 0.0;
+    data->errorCount = 0.0;
 
     pidDataReset(data);
 }
@@ -61,8 +63,19 @@ float pidNextIteration(PIDData *data, float error)
     }
     */
 
+    //Limit integral by 100 last samples
+    if(data->errorCount<100 ){
+        data->integral += error;
+        data->errorCount+=1;
+    }
+    else{
+        data->integral = 0;
+        data->errorCount=0;
+
+    }
+
     proportional = error;
-    integral = data->lastIntegral;
+    integral = data->integral;
     derivative = error - data->lastError;
 
     result = ((data->kp * proportional) + (data->ki * integral) + (data->kd * derivative));
@@ -70,4 +83,3 @@ float pidNextIteration(PIDData *data, float error)
 
     return result;
 }
-

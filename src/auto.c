@@ -228,39 +228,30 @@ void autonomous ()
     delay(200);
     driveTime(-127,-127,false,0.4);
     delay(200);
-
-/*     baseTurn(-135, 80, 300, true, true, 1.0); */
-/*     delay(200); */
-/*     driveTime(20, 20, true, 2.0); */
-/*     gyroReset(gyro); */
-/*     gyroOffset = -135; */
-
-    /* baseControl(-8, 80, 30, 2.0); */
-
-    //SECOND BASE
-    delay(200);
     baseTurn(-45,100,300,true,true,3);
     delay(200);
+
+    //Wall BUMP
     baseControl(-38,80,100,2.5);
     delay(200);
     driveTime(-100, -100, true, 0.75);
-
     gyroReset(gyro);
+    delay(200);
 
-    return;
-
-    baseTurn(45,100,300,true,true,3);
+    //SECOND BASE
+    baseControl(10,80,100,2.5);
+    delay(200);
+    baseTurn(15,100,300,true,true,1.75);
     delay(200);
     setLiftAngle(LIFT_DOWN);
     delay(500);
-    baseControl(25,80,100,2.5);
+    baseControl(18,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_UP);
     delay(500);
-    baseTurn(360 - 135,100,300,true,true,3);
-    gyroOffset = (gyroOffset - 360) % 360;
+    baseTurn(-127,100,300,true,true,3);
     delay(200);
-    baseControl(27,80,100,2.5);
+    baseControl(25.5,80,100,2.5);
     delay(200);
     setLiftAngle(LIFT_HALF);
     delay(200);
@@ -293,6 +284,10 @@ void autonomous ()
     setLiftAngle(LIFT_UP);
     delay(200);
 
+    while(1){
+      stopChassis();
+    }
+    
     //FOURTH BASE
     baseTurn(45,100,300,true,true,4);
     delay(200);
@@ -313,4 +308,3 @@ void autonomous ()
 
     delay(2000);
 }
-

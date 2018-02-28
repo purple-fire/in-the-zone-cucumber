@@ -10,8 +10,9 @@ typedef struct PIDData
 	float kp, ki, kd;
 
 	float lastError;
-	float lastIntegral;
-
+	float integral;
+	int errorCount;
+	
 	float maxPower;
 	float integralRange;
 	float minimumInput, maximumInput;
@@ -22,4 +23,3 @@ void pidDataInit(PIDData *data,
         float kp, float ki, float kd, float maxPower,
         float inputRange,float integralRange);
 float pidNextIteration(PIDData *data, float error);
-
