@@ -7,6 +7,7 @@
 #include "utilities.h"
 #include "tui.h"
 #include "debug.h"
+#include "motor.h"
 
 #define DB_TABLE_ROWS 10
 #define DB_TABLE_COLS 3
@@ -75,7 +76,7 @@ void debugMonitor(void *parameter) {
         dbTableValuePrintf(2, 1, "%8d", desiredLiftAngle);
         dbTableValuePrintf(2, 1, "%8d", liftPosition);
 
-        dbTableValuePrintf(1, 2, "%8d", gyroGet(gyro) + gyroOffset);
+        dbTableValuePrintf(1, 2, "%8d", devgyroGet(&gyroDev));
         dbTableValuePrintf(2, 2, "%8d", encoderGet(BREncoder));
         dbTableValuePrintf(3, 2, "%8d", encoderGet(BLEncoder));
         dbTableValuePrintf(4, 2, "%8d", liftPosition);

@@ -5,7 +5,7 @@ ROOT=.
 # Binary output directory
 BINDIR=$(ROOT)/bin
 # Subdirectories to include in the build
-SUBDIRS=src src/extras
+SUBDIRS=src src/extras src/components
 # Nothing below here needs to be modified by typical users
 
 # Include common aspects of this project

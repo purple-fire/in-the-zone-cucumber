@@ -14,6 +14,7 @@
 #include "main.h"
 #include "utilities.h"
 #include "pid.h"
+#include "motor.h"
 #include "liftControl.h"
 
 int tickGoal=0;
@@ -28,7 +29,6 @@ int turnError;
 int turnPower;
 
 int gyroValue;
-int gyroOffset = 0;
 
 /* TODO Figure out a way to update these in a thread-safe fashion when
  * baseControl() is not running
@@ -68,10 +68,10 @@ void baseControl(float target, float power, float integralRange, float timeOut)
         leftEncoderValue = encoderGet(BLEncoder);
 
         rightError = target - rightEncoderValue;
-        rightPower =  limitMotorPower(pidNextIteration(&rightData, rightError));
+        rightPower =  motorPowerLimit(pidNextIteration(&rightData, rightError));
 
         leftError = target - leftEncoderValue;
-        leftPower =  limitMotorPower(pidNextIteration(&leftData, leftError));
+        leftPower =  motorPowerLimit(pidNextIteration(&leftData, leftError));
 
         rightMotorsSet(rightPower);
         leftMotorsSet(leftPower);
@@ -82,7 +82,7 @@ void baseControl(float target, float power, float integralRange, float timeOut)
 
         delay(20);
     }
-    stopChassis();
+    chassisStop();
 }
 
 void baseTurn(float target, float power, float integralRange,
@@ -106,10 +106,10 @@ void baseTurn(float target, float power, float integralRange,
     timeOut = timeOut*1000;
 
     while ((T1 > (millis() - 350))&&(T2 > (millis() - timeOut))) {
-        gyroValue = gyroGet(gyro) + gyroOffset;
+        gyroValue = devgyroGet(&gyroDev);
 
         turnError = target - gyroValue;
-        turnPower = limitMotorPower(pidNextIteration(&data, turnError));
+        turnPower = motorPowerLimit(pidNextIteration(&data, turnError));
 
         // TODO Should we check that each side moves the same amount and adjust
         // them afterwards if not?
@@ -131,7 +131,7 @@ void baseTurn(float target, float power, float integralRange,
 
         delay(20);
     }
-    stopChassis ();
+    chassisStop ();
 }
 
 /**
@@ -177,17 +177,16 @@ void wallBump(int threshold, float power, float timeOut, int angle)
       leftMotorsSet(power);
     }
 
-    stopChassis();
+    chassisStop();
 
-    gyroOffset = angle;
-    gyroReset(gyro);
+    devgyroResetTo(&gyroDev, angle);
     delay(200);
 }
 
 
 void autonomous ()
 {
-    gyroReset(gyro);
+    devgyroReset(&gyroDev);
 
     //NOW START!
 

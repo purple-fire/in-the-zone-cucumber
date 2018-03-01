@@ -24,18 +24,12 @@
 #define MAIN_H_
 
 #include "API.h"
+#include "gyro.h"
 
 /* Allow usage of this file in C++ programs */
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/* Motors */
-#define rightMotorR 2
-#define rightMotorF 3
-#define liftMotor 4
-#define leftMotorR 7
-#define leftMotorF 8
 
 /* Sensors */
 #define GYRO_PORT 8
@@ -47,11 +41,12 @@ extern "C" {
 
 #define POTENTIOMETER_PORT 2
 
-Gyro gyro;
 Ultrasonic sonar;
 
 Encoder BLEncoder;
 Encoder BREncoder;
+
+DevGyro gyroDev;
 
 /* Globals so that values can be seen from outside functions. */
 extern int tickGoal,

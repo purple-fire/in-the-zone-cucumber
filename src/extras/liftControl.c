@@ -6,6 +6,7 @@
 #include "liftControl.h"
 #include "pid.h"
 #include "utilities.h"
+#include "motor.h"
 
 int liftToggle = false;
 int desiredLiftAngle = LIFT_UP;

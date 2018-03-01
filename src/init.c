@@ -13,6 +13,7 @@
 #include "main.h"
 #include "debug.h"
 #include "liftControl.h"
+#include "gyro.h"
 
 /**
  * Task handles for the lift control and debuging tasks.
@@ -50,9 +51,9 @@ void initializeIO() {
 void initialize() {
     /* Initialize the ultrasonic */
     sonar = ultrasonicInit(6, 5);
+
     /* Initialize the gryo */
-    gyro = gyroInit(GYRO_PORT, 259);
-    delay(2000); /* TODO Does gyroInit() do this */
+    devgyroInit(&gyroDev, GYRO_PORT, 259);
 
     /* Initialize encoders
      * TODO Should one of these be reversed?

@@ -15,6 +15,7 @@
 #include "main.h"
 #include "pid.h"
 #include "utilities.h"
+#include "motor.h"
 
 typedef enum { DRIVE_AUTO, DRIVE_TANK, DRIVE_ARCADE } DriveMode;
 
@@ -24,8 +25,7 @@ DriveMode driveMode;
  * Driver control with tank-style controls.
  */
 static void driverControl(void *parameter) {
-  stopChassis();
-
+  chassisStop();
 
   while (true) {
     if (driveMode == DRIVE_TANK) {
@@ -35,13 +35,13 @@ static void driverControl(void *parameter) {
       if (ABS(joyRight) <= 8) {
         rightMotorsBrake();
       } else {
-        rightMotorsSet(joyRight * MAX_POWER_OUT / 127);
+        rightMotorsSet(joyRight * MOTOR_POWER_MAX / 127);
       }
 
       if (ABS(joyLeft) <= 8) {
         leftMotorsBrake();
       } else {
-        leftMotorsSet(joyLeft * MAX_POWER_OUT / 127);
+        leftMotorsSet(joyLeft * MOTOR_POWER_MAX / 127);
       }
 
     } else if (driveMode == DRIVE_ARCADE) {
@@ -54,18 +54,18 @@ static void driverControl(void *parameter) {
       if (ABS(leftPower) <= 8) {
         leftMotorsBrake();
       } else {
-        leftMotorsSet(leftPower * MAX_POWER_OUT / 127);
+        leftMotorsSet(leftPower * MOTOR_POWER_MAX / 127);
       }
 
       if (ABS(rightPower) <= 8) {
         rightMotorsBrake();
       } else {
-        rightMotorsSet(rightPower * MAX_POWER_OUT / 127);
+        rightMotorsSet(rightPower * MOTOR_POWER_MAX / 127);
       }
 
     } else {
       /* Stop for invalid modes */
-      stopChassis();
+      chassisStop();
     }
 
     // Motor values can only be updated every 20ms
@@ -74,7 +74,7 @@ static void driverControl(void *parameter) {
 }
 
 static void startAutoPilot(void *parameter) {
-  stopChassisSmooth();
+  chassisStopSmooth();
   autonomous();
 }
 
