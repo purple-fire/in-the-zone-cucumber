@@ -10,7 +10,7 @@
 #include "motor.h"
 
 #define DB_TABLE_ROWS 10
-#define DB_TABLE_COLS 3
+#define DB_TABLE_COLS 4
 #define DB_TABLE_COL_WIDTH 32
 #define DB_TABLE_VALUE_WIDTH 8
 
@@ -23,13 +23,15 @@
         DB_GET_VALUE_ROW(row), DB_GET_VALUE_COL(col), __VA_ARGS__)
 
 static const char *debugTable[DB_TABLE_ROWS][DB_TABLE_COLS] = {
-    { "AUTONOMUS",      "LIFT",         "SENSORS" },
+    { "AUTONOMUS",      "MISC",         "SENSORS" },
     { "rightError",     "liftToggle",   "gyro" },
     { "rightPower",     "liftTarget",   "rightEncoder" },
     { "leftError",      "liftPosition", "leftEncoder" },
     { "leftPower",      NULL,           "potentiometer" },
-    { "turnError",      NULL,           "joy L" },
-    { "turnPower",      NULL,           "joy R" },
+    { "turnError",      NULL,           "Ultrasonic" },
+    { "turnPower",      "lineThresh",   "Center line" },
+    { NULL,             NULL,           "joy L" },
+    { NULL,             NULL,           "joy R" },
 };
 
 static void debugPrintTable(void) {
@@ -74,14 +76,17 @@ void debugMonitor(void *parameter) {
 
         dbTableValuePrintf(1, 1, "%8s", liftToggle ? "on" : "off");
         dbTableValuePrintf(2, 1, "%8d", desiredLiftAngle);
-        dbTableValuePrintf(2, 1, "%8d", liftPosition);
+        dbTableValuePrintf(3, 1, "%8d", liftPosition);
+        dbTableValuePrintf(6, 1, "%8d", lineThreshold);
 
         dbTableValuePrintf(1, 2, "%8d", devgyroGet(&gyroDev));
         dbTableValuePrintf(2, 2, "%8d", encoderGet(BREncoder));
         dbTableValuePrintf(3, 2, "%8d", encoderGet(BLEncoder));
         dbTableValuePrintf(4, 2, "%8d", liftPosition);
-        dbTableValuePrintf(5, 2, "%+4d:%+4d", joystickGetAnalog(1, CRY), joystickGetAnalog(1, CRX));
-        dbTableValuePrintf(6, 2, "%+4d:%+4d", joystickGetAnalog(1, CLY), joystickGetAnalog(1, CLX));
+        dbTableValuePrintf(5, 2, "%8d", ultrasonicGet(sonar));
+        dbTableValuePrintf(6, 2, "%8d", analogReadCalibrated(LINE_CENTER_PORT));
+        dbTableValuePrintf(7, 2, "%+4d:%+4d", joystickGetAnalog(1, CLY), joystickGetAnalog(1, CLX));
+        dbTableValuePrintf(8, 2, "%+4d:%+4d", joystickGetAnalog(1, CRY), joystickGetAnalog(1, CRX));
 
         fflush(stdout);
 

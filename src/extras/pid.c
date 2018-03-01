@@ -38,13 +38,13 @@ float pidNextIteration(PIDData *data, float error)
     int result;
 
     /* Wrap around error */
-    if (ABS(error) > (data->maximumInput - data->minimumInput) / 2) {
-        if (error > 0) {
-            error = error - data->maximumInput + data->minimumInput;
-        } else {
-            error = error + data->maximumInput - data->minimumInput;
-        }
-    }
+    /* if (ABS(error) > (data->maximumInput - data->minimumInput) / 2) { */
+    /*     if (error > 0) { */
+    /*         error = error - data->maximumInput + data->minimumInput; */
+    /*     } else { */
+    /*         error = error + data->maximumInput - data->minimumInput; */
+    /*     } */
+    /* } */
 
     /* Limit integral
     if ((error * data->kp < data->maxPower) && (error * data->kp > -(data->maxPower))) {
@@ -54,14 +54,13 @@ float pidNextIteration(PIDData *data, float error)
     }
     */
 
-    /* Limit integral (by another method)
+    /* Limit integral (by another method) */
     if( ABS(error) < data->integralRange ){
-        data->lastIntegral += error;
+        data->integral += error;
     }
     else{
-        data->lastIntegral = 0;
+        data->integral = 0;
     }
-    */
 
     /*Limit integral by 100 last samples
     if(data->errorCount<100 ){

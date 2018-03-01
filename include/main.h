@@ -41,12 +41,15 @@ extern "C" {
 
 #define POTENTIOMETER_PORT 2
 
-Ultrasonic sonar;
+#define LINE_RIGHT_PORT 5
+#define LINE_CENTER_PORT 6
+#define LINE_LEFT_PORT 7
 
-Encoder BLEncoder;
-Encoder BREncoder;
+extern Ultrasonic sonar;
+extern Encoder BLEncoder;
+extern Encoder BREncoder;
 
-DevGyro gyroDev;
+extern DevGyro gyroDev;
 
 /* Globals so that values can be seen from outside functions. */
 extern int tickGoal,
@@ -64,7 +67,9 @@ extern int tickGoal,
            gyroValue,
            gyroOffset,
            rightEncoderValue,
-           leftEncoderValue;
+           leftEncoderValue,
+
+           lineThreshold;
 
 /**
  * Runs the user autonomous code. This function will be started in its own task

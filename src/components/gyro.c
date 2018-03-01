@@ -22,7 +22,7 @@ int devgyroGet(DevGyro *pGyro) {
 }
 
 void devgyroReset(DevGyro *pGyro) {
-    devgyroResetTo(pGyro->base, 0);
+    devgyroResetTo(pGyro, 0);
 }
 
 void devgyroResetTo(DevGyro *pGyro, int angle) {

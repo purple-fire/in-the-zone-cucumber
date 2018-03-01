@@ -16,7 +16,7 @@ void liftControl(void *parameter)
 {
     // Separate variables to simplify tuning
     const float kp = 0.2;
-    const float ki = 0.001; //0.7;
+    const float ki = 0.000; //0.7;
     const float kd = 0.0;
 
     PIDData data;
