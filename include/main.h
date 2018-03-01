@@ -48,6 +48,7 @@ extern "C" {
 #define POTENTIOMETER_PORT 2
 
 Gyro gyro;
+Ultrasonic sonar;
 
 Encoder BLEncoder;
 Encoder BREncoder;
@@ -144,4 +145,3 @@ void operatorControl();
 #endif
 
 #endif
-

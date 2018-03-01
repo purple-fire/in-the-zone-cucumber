@@ -44,4 +44,3 @@ void setLiftAngle(int liftAngle)
 {
     desiredLiftAngle = liftAngle;
 }
-

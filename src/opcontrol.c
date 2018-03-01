@@ -26,6 +26,7 @@ DriveMode driveMode;
 static void driverControl(void *parameter) {
   stopChassis();
 
+
   while (true) {
     if (driveMode == DRIVE_TANK) {
       int joyRight = joystickGetAnalog(1, CRY);

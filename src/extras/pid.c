@@ -63,7 +63,7 @@ float pidNextIteration(PIDData *data, float error)
     }
     */
 
-    //Limit integral by 100 last samples
+    /*Limit integral by 100 last samples
     if(data->errorCount<100 ){
         data->integral += error;
         data->errorCount+=1;
@@ -73,6 +73,7 @@ float pidNextIteration(PIDData *data, float error)
         data->errorCount=0;
 
     }
+    */
 
     proportional = error;
     integral = data->integral;

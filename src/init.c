@@ -48,6 +48,8 @@ void initializeIO() {
  * pre_auton() in other environments can be implemented in this task if desired.
  */
 void initialize() {
+    /* Initialize the ultrasonic */
+    sonar = ultrasonicInit(6, 5);
     /* Initialize the gryo */
     gyro = gyroInit(GYRO_PORT, 259);
     delay(2000); /* TODO Does gyroInit() do this */
@@ -68,7 +70,5 @@ void initialize() {
             liftControl, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 
     /* Initialize debugging. */
-    debugTask = taskCreate(debugMonitor,
-            TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+    //debugTask = taskCreate(debugMonitor, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 }
-
