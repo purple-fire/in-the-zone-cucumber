@@ -11,6 +11,8 @@
  * obtained from http://sourceforge.net/projects/freertos/files/ or on request.
  */
 
+#include <limits.h>
+
 #include "main.h"
 #include "utilities.h"
 #include "pid.h"
@@ -163,21 +165,23 @@ void driveTime(float powerL, float powerR, bool coast, float timeOut)
  * Drives until it senses a obstacle
  */
 
-void wallBump(int threshold, float power, float timeOut)
+void wallBump(int threshold, float power, float timeOut, int angle)
 {
     long T1;
     T1 = millis();
-    int distance;
-    distance = -1;
+    int distance = INT_MAX;
     timeOut = timeOut*1000;
 
-    while (T1 > (millis() - timeOut) && ((distance>threshold)||(distance==-1))) {
+    while (T1 > (millis() - timeOut) && distance > threshold) {
       distance = ultrasonicGet(sonar);
       rightMotorsSet(power);
       leftMotorsSet(power);
     }
+
     stopChassis();
-    gyroOffset = gyroGet(gyro);
+
+    gyroOffset = angle;
+    gyroReset(gyro);
     delay(200);
 }
 
@@ -234,7 +238,7 @@ void autonomous ()
     //Bump Bar
     setLiftAngle(LIFT_UP);
     delay(500);
-    wallBump(13,30,20);
+    wallBump(13,30,20,-135);
     delay(200);
 
     //SECOND BASE
