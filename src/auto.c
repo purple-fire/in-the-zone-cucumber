@@ -11,8 +11,6 @@
  * obtained from http://sourceforge.net/projects/freertos/files/ or on request.
  */
 
-#include <limits.h>
-
 #include "main.h"
 #include "utilities.h"
 #include "pid.h"
@@ -169,10 +167,11 @@ void wallBump(int threshold, float power, float timeOut, int angle)
 {
     long T1;
     T1 = millis();
-    int distance = INT_MAX;
+    int distance = ULTRA_BAD_RESPONSE;
     timeOut = timeOut*1000;
 
-    while (T1 > (millis() - timeOut) && distance > threshold) {
+    while (T1 > (millis() - timeOut)
+            && (distance > threshold || distance == ULTRA_BAD_RESPONSE)) {
       distance = ultrasonicGet(sonar);
       rightMotorsSet(power);
       leftMotorsSet(power);
