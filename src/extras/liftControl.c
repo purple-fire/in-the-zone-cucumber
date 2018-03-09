@@ -15,12 +15,12 @@ int liftPosition;
 void liftControl(void *parameter)
 {
     // Separate variables to simplify tuning
-    const float kp = 0.2;
-    const float ki = 0.000; //0.7;
+    const float kp = 0.15;
+    const float ki = 0.010; //0.7;
     const float kd = 0.0;
 
     PIDData data;
-    pidDataInit(&data, kp, ki, kd, 125, 4095, 50);
+    pidDataInit(&data, kp, ki, kd, 125, 4095, 150);
 
     while (true)
     {

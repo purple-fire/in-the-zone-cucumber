@@ -46,9 +46,9 @@ void baseControl(float target, float power, float integralRange, float timeOut)
     PIDData rightData;
     PIDData leftData;
 
-    float kp = 0.25;
-    float ki = 0.00; // 0.02
-    float kd = 0.9;
+    float kp = 0.2;
+    float ki = 0.0005;
+    float kd = 0.0;
     float maxPower = power;
 
     pidDataInit(&leftData, kp, ki, kd, maxPower, 32767, integralRange);
@@ -59,7 +59,7 @@ void baseControl(float target, float power, float integralRange, float timeOut)
 
     target = INCHES_TO_TICKS(target);
 
-    long T1,T2;
+    long T1, T2;
     T1 = millis();
     T2 = millis();
 
@@ -89,19 +89,18 @@ void baseControl(float target, float power, float integralRange, float timeOut)
     chassisStop();
 }
 
-void baseTurn(float target, float power, float integralRange,
-        bool leftToggle, bool rightToggle, float timeOut)
+void baseTurn(float target, bool leftToggle, bool rightToggle, float timeOut)
 {
-    const float kp = 2.5;
-    const float ki = 0.02; //0.02;
-    const float kd = 9.0;
+    const float kp = 2.0;
+    const float ki = 0.007;
+    const float kd = 1.0;
+
     /* const float kp = 0.5; */
     /* const float ki = 0.0; */
     /* const float kd = 0.0; */
-    const float maxPower = power;
 
     PIDData data;
-    pidDataInit(&data, kp, ki, kd, maxPower, 360, integralRange);
+    pidDataInit(&data, kp, ki, kd, 10, 360, 10);
 
     int oldValue = INT_MAX;
     gyroValue = devgyroGet(&gyroDev);
@@ -111,7 +110,7 @@ void baseTurn(float target, float power, float integralRange,
         gyroValue = devgyroGet(&gyroDev);
     }
 
-    long T1,T2;
+    long T1, T2;
     T1 = millis();
     T2 = millis();
 
@@ -137,7 +136,7 @@ void baseTurn(float target, float power, float integralRange,
             leftMotorsSet(0);
         }
 
-        if(ABS(turnError)>2){
+        if(ABS(turnError)>3){
             T1 = millis();
         }
 
@@ -167,8 +166,8 @@ void driveTime(float powerL, float powerR, bool coast, float timeOut)
         rightMotorsSet(0);
         leftMotorsSet(0);
     } else {
-        rightMotorsSet(-SIGN(powerR));
-        leftMotorsSet(-SIGN(powerL));
+        rightMotorsBrake();
+        leftMotorsBrake();
     }
 }
 
@@ -181,31 +180,36 @@ void wallBump(int threshold, float power, float timeOut, int angle)
     long T1;
     T1 = millis();
     int distance = ULTRA_BAD_RESPONSE;
+    bool bumped = true;
     timeOut = timeOut*1000;
 
-    while (T1 > (millis() - timeOut)
-            && (distance > threshold || distance == ULTRA_BAD_RESPONSE)) {
+    while (distance > threshold || distance == ULTRA_BAD_RESPONSE) {
       distance = ultrasonicGet(sonar);
       rightMotorsSet(power);
       leftMotorsSet(power);
+
+      if (T1 < millis() - timeOut) {
+          bumped = false;
+          break;
+      }
     }
 
     chassisStop();
 
-    devgyroResetTo(&gyroDev, angle);
+    if (bumped) {
+        /* Only reset the gyro if we actually bump (as opposed to timing out) */
+        devgyroResetTo(&gyroDev, angle);
+    }
+
     delay(100);
 }
 
 void autonomous ()
 {
-    devgyroReset(&gyroDev);
+
+    devgyroResetTo(&gyroDev, -4);
 
     //NOW START!
-
-
-    setLiftAngle(LIFT_UP);
-    liftToggle = 1;
-    delay(700);
 
 /*
     baseTurn(90, 80, 10, true, true, 5.0);
@@ -224,203 +228,141 @@ void autonomous ()
     return;
     */
 
-    setLiftAngle(LIFT_DOWN);
     liftToggle = 1;
+    setLiftAngle(LIFT_DOWN);
     delay(700);
 
     //FIRST BASE
     /*
-    baseControl(56,80,10,2.5);
+    baseControl(56, 80, 10, 2.5);
     delay(100);
     setLiftAngle(LIFT_UP);
     delay(1000);
-    baseTurn(-26,90,10,true,true,1);
+    baseTurn(-26, 90, 10, true, true, 1);
     delay(100);
-    baseControl(-60,80,10,2.5);
+    baseControl(-60, 80, 10, 2.5);
     delay(200);
-    baseTurn(-135,10,10,true,true,2);
+    baseTurn(-135, true, true, 2);
     delay(100);
-    driveTime(127,127,true,1.0);
+    driveTime(127, 127, true, 1.0);
     setLiftAngle(LIFT_HALF-200);
     delay(100);
-    driveTime(-127,-127,false,0.4);
+    driveTime(-127, -127, false, 0.4);
     delay(100);
     */
 
-    baseControl(56, 80, 10, 2.0);
-    delay(100);
+    baseControl(60, 80, 10, 2.0);
     setLiftAngle(LIFT_UP);
     delay(500);
-    baseControl(-46, 80, 10, 2.0);
-    delay(100);
-    baseTurn(135, 10, 10, true, true, 2);
-    delay(100);
-    baseControl(18, 80, 10, 2.0);
-    baseTurn(360 - 135, 10, 10, true, true, 2);
+    baseControl(-48, 80, 10, 2.0);
+    baseTurn(135, true, true, 1.5);
+    baseControl(12, 80, 10, 2.0);
+    baseTurn(360 - 135, true, true, 1.0);
     devgyroOffset(&gyroDev, -360);
-    delay(100);
-    driveTime(127,127,true,1.0);
-    setLiftAngle(LIFT_HALF-200);
-    delay(500);
-    driveTime(-127,-127,false,0.5);
-    delay(100);
+    driveTime(127, 127, true, 1.0);
+    /* setLiftAngle(LIFT_HALF-200); */
+    /* delay(500); */
+    driveTime(-127, -127, false, 0.3);
 
     //Bump Bar
     setLiftAngle(LIFT_UP);
     delay(500);
-    wallBump(10,25,10,-135);
-    delay(100);
+    wallBump(10, 25, 3, -135);
+    delay(200);
 
     //SECOND BASE
-    baseControl(-6,80,10,2.5);
-    delay(200);
-    baseTurn(-45,10,10,true,true,2);
-    delay(100);
-    baseControl(-23,80,10,2.5);
-    delay(200);
-    baseTurn(45,10,10,true,true,2);
-    delay(100);
+    baseControl(-6, 80, 10, 1.5);
+    baseTurn(-45, true, true, 1.5);
+    baseControl(-14, 80, 10, 1.5);
+    baseTurn(45, true, true, 1.5);
     setLiftAngle(LIFT_DOWN);
-    delay(500);
-    baseControl(19,80,10,2.5);
-    delay(100);
+    delay(400);
+    baseControl(19, 80, 10, 2.5);
     setLiftAngle(LIFT_UP);
     delay(500);
-    baseTurn(360-135,10,10,true,true,2);
+    baseTurn(360-135, true, true, 2.0);
     devgyroOffset(&gyroDev, -360);
-    delay(100);
-
-    baseControl(19, 80, 10, 2.5);
-    delay(100);
-
-    wallBump(10, 40, 10, -135);
-    delay(100);
+    baseControl(17, 80, 10, 2.0);
+    wallBump(10, 25, 2.0, -135);
 
     /*
-    baseControl(25,80,10,2.5);
+    baseControl(25, 80, 10, 2.5);
     delay(100);
     */
     setLiftAngle(LIFT_HALF);
-    delay(100);
-    baseControl(-8,80,10,2.5);
-    delay(100);
+    delay(300);
+    baseControl(-8, 80, 10, 2.0);
     setLiftAngle(LIFT_UP);
-    delay(100);
 
     //THIRD BASE
-    baseTurn(-45,10,10,true,true,3);
-    delay(100);
-    baseControl(32,80,10,2.5);
-    delay(100);
-    baseTurn(45,10,10,true,true,3);
-    delay(100);
+    baseTurn(-45, true, true, 2.0);
+    baseControl(30, 80, 10, 2.5);
+    baseTurn(45, true, true, 2.0);
     setLiftAngle(LIFT_DOWN);
     delay(500);
-    baseControl(32,80,10,2.5);
-    delay(100);
+    baseControl(32, 80, 10, 2.5);
     setLiftAngle(LIFT_UP);
     delay(500);
-    baseTurn(-135,10,10,true,true,3);
-    delay(100);
-    baseControl(23,80,10,2.5);
-    delay(100);
-    wallBump(10, 25, 10, -135);
-    delay(100);
+    baseTurn(-135, true, true, 2.0);
+    baseControl(32, 80, 10, 2.5);
+
     setLiftAngle(LIFT_HALF);
-    delay(100);
-    baseControl(-25,80,10,2.5);
-    delay(100);
-    setLiftAngle(LIFT_UP);
-    delay(100);
+    delay(500);
+    baseControl(-25, 80, 10, 2.0);
 
     //FOURTH BASE
-    baseTurn(45,10,10,true,true,4);
-    delay(100);
+    baseTurn(45, true, true, 1.5);
     setLiftAngle(LIFT_DOWN);
-    delay(100);
-    baseControl(62,10,10,2.5); // Problem child; need to tune to properly grab blue base
-    delay(100);
+    baseControl(62, 10, 10, 2.5);
     setLiftAngle(LIFT_UP);
-    delay(100);
+    delay(300);
 
-    baseTurn(90, 30, 10, true, true, 2.0);
-    delay(100);
+    baseTurn(90, true, true, 1.5);
     baseControl(20, 10, 10, 2.0);
-    delay(100);
-    baseTurn(45, 30, 10, true, true, 2.0);
-    delay(100);
+    baseTurn(45, true, true, 0.7);
 
-    driveTime(127,127,true,1.0);
-    setLiftAngle(LIFT_HALF-200);
-    delay(500);
-    driveTime(-127,-127,false,0.5);
-    delay(100);
-
-    setLiftAngle(LIFT_UP);
-    delay(500);
-
-    wallBump(10, 25, 5.0, 45);
-    delay(100);
+    driveTime(127, 127, true, 1.0);
+    driveTime(-127, -127, false, 0.5);
 
     // FIFTH BASE
-    baseControl(-6,80,10,2.5);
-    delay(200);
-    baseTurn(-45,10,10,true,true,2);
-    delay(100);
-    baseControl(-24,80,10,2.5);
-    delay(100);
-    baseTurn(-135,10,10,true,true,2);
-    delay(100);
+    baseTurn(-40, true, true, 1.5);
+    baseControl(-24, 80, 10, 2.5);
+    baseTurn(-135, true, true, 1.5);
     setLiftAngle(LIFT_DOWN);
     delay(300);
-    baseControl(19,80,10,2.5);
-    delay(100);
+    baseControl(19, 80, 10, 2.5);
     setLiftAngle(LIFT_UP);
-    delay(100);
-    baseTurn(45-360,10,10,true,true,2);
+    baseTurn(45-360, true, true, 2.0);
     devgyroOffset(&gyroDev, 360);
-    delay(100);
-    baseControl(20, 80, 10, 2.0);
-    delay(100);
-    wallBump(10, 30, 10, 45);
-    delay(100);
+    baseControl(24, 80, 10, 2.0);
+    wallBump(10, 30, 3, 45);
 
     setLiftAngle(LIFT_HALF);
     delay(200);
-    baseControl(-8,80,10,2.5);
-    delay(100);
+    baseControl(-8, 80, 10, 2.5);
     setLiftAngle(LIFT_UP);
-    delay(100);
 
     // SIXTH BASE
-    baseTurn(135, 10, 10, true, true, 2);
-    delay(100);
+    baseTurn(135, true, true, 2);
     baseControl(-46, 80, 10, 2.0);
-    delay(200);
 
-    baseTurn(360-90, 10, 10, true, true, 2.0);
+    baseTurn(360-90, true, true, 2.0);
     devgyroOffset(&gyroDev, -360);
-    delay(100);
     setLiftAngle(LIFT_DOWN);
     baseControl(50, 80, 10, 2.0);
     setLiftAngle(LIFT_UP);
-    delay(100);
+    delay(400);
     baseControl(-50, 80, 10, 2.0);
-    delay(200);
-    baseTurn(45, 10, 10, true, false, 2.0);
-    delay(100);
+    baseTurn(45, true, false, 0.5);
 
-    wallBump(10, 25, 10, 45);
+    wallBump(10, 25, 3, 45);
 
     //Bump Bar
     setLiftAngle(LIFT_HALF);
-    delay(200);
+    delay(500);
     baseControl(-10, 80, 10, 2.0);
-    delay(100);
     setLiftAngle(LIFT_UP);
-    delay(100);
-    baseTurn(95, 10, 10, true, true, 2.0);
-    delay(200);
+    baseTurn(95, true, true, 2.0);
     baseControl(-50, 80, 10, 2.0);
 
     delay(2000);

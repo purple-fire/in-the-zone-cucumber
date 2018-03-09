@@ -32,13 +32,13 @@ static void driverControl(void *parameter) {
       int joyRight = joystickGetAnalog(1, CRY);
       int joyLeft = joystickGetAnalog(1, CLY);
 
-      if (ABS(joyRight) <= 8) {
+      if (ABS(joyRight) <= 10) {
         rightMotorsBrake();
       } else {
         rightMotorsSet(joyRight * MOTOR_POWER_MAX / 127);
       }
 
-      if (ABS(joyLeft) <= 8) {
+      if (ABS(joyLeft) <= 10) {
         leftMotorsBrake();
       } else {
         leftMotorsSet(joyLeft * MOTOR_POWER_MAX / 127);
@@ -115,7 +115,7 @@ void operatorControl() {
         setLiftAngle(LIFT_UP);
       } else if (joystickGetDigital(1, 6, JOY_DOWN) == 1) {
         setLiftAngle(LIFT_DOWN);
-      } else if (joystickGetDigital(1, 5, JOY_DOWN) == 1) {
+      } else if (joystickGetDigital(1, 5, JOY_DOWN) == 1 || joystickGetDigital(1, 5, JOY_UP) == 1) {
         setLiftAngle(LIFT_HALF);
       }
     }

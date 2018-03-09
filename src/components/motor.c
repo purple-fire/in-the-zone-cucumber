@@ -39,7 +39,10 @@ bool motorSetSmooth(unsigned char channel, int power) {
 }
 
 void motorBrake(unsigned char channel) {
-    motorSet(channel, -SIGN(motorGet(channel)));
+    int curPower = motorGet(channel);
+    if (ABS(curPower) > 1) {
+        motorSet(channel, -SIGN(curPower));
+    }
 }
 
 void motorBrakeSmooth(unsigned char channel) {
