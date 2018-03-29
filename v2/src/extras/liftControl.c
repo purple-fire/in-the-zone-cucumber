@@ -24,13 +24,14 @@ void liftControl(void *parameter)
 
     while (true)
     {
+
         if (liftToggle)
         {
-            liftPosition = analogRead(POTENTIOMETER_PORT);
+            liftPosition = analogRead(MOGO_POT_PORT);
             int errorLiftAngle = desiredLiftAngle - liftPosition;
             int liftPowerOut = pidNextIteration(&data, errorLiftAngle);
 
-            motorSet (liftMotor,liftPowerOut);
+            motorSet (liftMotor,-liftPowerOut);
         }
         else
         {

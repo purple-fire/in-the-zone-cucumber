@@ -39,7 +39,7 @@ extern "C" {
 #define QUAD_TOP_PORT_RIGHT 3
 #define QUAD_BOTTOM_PORT_RIGHT  4
 
-#define POTENTIOMETER_PORT 2
+#define MOGO_POT_PORT 2
 
 #define LINE_RIGHT_PORT 5
 #define LINE_CENTER_PORT 6

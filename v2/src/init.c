@@ -84,6 +84,7 @@ void initialize() {
 
     /* Calibrate the potentiometer */
     /* analogCalibrate(POTENTIOMETER_PORT); */
+    analogCalibrate(MOGO_POT_PORT);
 
     /* Start the lift task here since it is needed in both autonomous and driver
      * control.
@@ -92,6 +93,5 @@ void initialize() {
             liftControl, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 
     /* Initialize debugging. */
-    debugTask = taskCreate(debugMonitor, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
+//    debugTask = taskCreate(debugMonitor, TASK_DEFAULT_STACK_SIZE, NULL, TASK_PRIORITY_DEFAULT);
 }
-

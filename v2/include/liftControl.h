@@ -4,10 +4,9 @@
 
 #include "main.h"
 
-#define LIFT_DOWN 1400
-#define LIFT_HALF 1300
-#define LIFT_UP 9
+#define LIFT_DOWN 1030
+#define LIFT_HALF 1530
+#define LIFT_UP 2612
 
 void liftControl(void *parameter);
 void setLiftAngle(int liftAngle);
-

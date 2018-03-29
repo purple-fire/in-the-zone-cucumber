@@ -52,14 +52,14 @@ void motorBrakeSmooth(unsigned char channel) {
 }
 
 void leftMotorsSet(int power) {
-    motorSet(leftMotorF, power);
-    motorSet(leftMotorR, power);
+    motorSet(leftMotorF, -power);
+    motorSet(leftMotorR, -power);
 }
 
 void rightMotorsSet(int power) {
     /* Sign of right motors is switched */
-    motorSet(rightMotorF, -power);
-    motorSet(rightMotorR, -power);
+    motorSet(rightMotorF, power);
+    motorSet(rightMotorR, power);
 }
 
 void chassisStop(void) {
@@ -87,13 +87,13 @@ void chassisBrake(void) {
 }
 
 bool leftMotorsSetSmooth(int power) {
-    return motorSetSmooth(leftMotorF, power)
-        && motorSetSmooth(leftMotorR, power);
+    return motorSetSmooth(leftMotorF, -power)
+        && motorSetSmooth(leftMotorR, -power);
 }
 
 bool rightMotorsSetSmooth(int power) {
-    return motorSetSmooth(rightMotorF, -power)
-        && motorSetSmooth(rightMotorR, -power);
+    return motorSetSmooth(rightMotorF, power)
+        && motorSetSmooth(rightMotorR, power);
 }
 
 void chassisStopSmooth(void) {

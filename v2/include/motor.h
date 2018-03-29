@@ -10,9 +10,9 @@
 /* Motors */
 #define rightMotorR 2
 #define rightMotorF 3
-#define liftMotor 4
-#define leftMotorR 7
-#define leftMotorF 8
+#define liftMotor 7
+#define leftMotorR 8
+#define leftMotorF 9
 
 #define MOTOR_SMOOTH_FACTOR 0.1
 

@@ -53,6 +53,8 @@ static void debugPrintTable(void) {
 }
 
 void debugMonitor(void *parameter) {
+    printf("\rlift_pot: %d", analogReadCalibrated(MOGO_POT_PORT));
+    return;
     debugPrintTable();
 
     while (true) {

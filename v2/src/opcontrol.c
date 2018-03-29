@@ -88,7 +88,6 @@ void operatorControl() {
   liftToggle = 1;
 
   while (true) {
-
     if (driveMode != DRIVE_AUTO && (joystickGetDigital(1, 8, JOY_RIGHT) == 1)) {
       taskDelete(driverControlHandle);
       autoPilotHandle = taskCreate(startAutoPilot, TASK_DEFAULT_STACK_SIZE,
