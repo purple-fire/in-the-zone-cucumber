@@ -1,2 +1,1 @@
-# in-the-zone-skills
-In the Zone Skills Bot
+# in-the-zone-pros
